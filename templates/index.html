@@ -20,7 +20,7 @@
             background: linear-gradient(135deg, #1a0b2e 0%, #3a105c 100%);
             background-attachment: fixed;
             color: var(--text-color);
-            margin: 0; padding: 10px;
+            margin: 0; padding: 8px;
             display: flex; justify-content: center;
             position: relative;
             overflow-x: hidden;
@@ -29,24 +29,24 @@
         /* Sparkle Toggle Control in Upper Left */
         .sparkle-toggle-wrapper {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 10px;
+            left: 10px;
             background: rgba(40, 19, 71, 0.85);
             border: 1px solid rgba(241, 91, 181, 0.3);
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85em;
+            gap: 6px;
+            font-size: 0.8em;
             z-index: 10;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .sparkle-toggle-wrapper input[type="checkbox"] {
             cursor: pointer;
             accent-color: var(--accent-unicorn);
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
 
         /* Sparkle Background Elements */
@@ -69,12 +69,12 @@
         .container {
             width: 100%; max-width: 950px;
             background: var(--card-bg);
-            padding: 15px; border-radius: 12px;
+            padding: 12px; border-radius: 12px;
             box-shadow: 0 8px 32px rgba(155, 93, 229, 0.3);
             border: 1px solid rgba(241, 91, 181, 0.2);
             position: relative;
             z-index: 1;
-            margin-top: 30px;
+            margin-top: 35px;
         }
         @media (min-width: 768px) {
             body { padding: 20px; }
@@ -84,9 +84,10 @@
             color: var(--accent-unicorn); 
             text-align: center; 
             margin-top: 0; 
-            font-size: 1.5rem; 
+            font-size: 1.3rem; 
             text-shadow: 0 2px 15px rgba(241, 91, 181, 0.6);
             animation: headerGlow 3s infinite alternate;
+            white-space: nowrap;
         }
         @keyframes headerGlow {
             0% { filter: drop-shadow(0 0 2px rgba(255, 209, 102, 0.4)); }
@@ -96,26 +97,43 @@
         .rule-box {
             background: rgba(241, 91, 181, 0.15);
             border-left: 4px solid var(--accent-unicorn);
-            padding: 12px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em;
+            padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
         }
+        
+        /* Optimized Stat Banner for Mobile */
         .stat-banner {
-            display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center; gap: 10px;
-            background: #1f0d38; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: #1f0d38; padding: 12px; border-radius: 8px; margin-bottom: 15px;
             border: 1px solid rgba(155, 93, 229, 0.3);
         }
-        .stat-item { text-align: center; flex: 1; min-width: 120px; }
-        .stat-val { font-size: 1.4em; font-weight: bold; color: var(--accent-gold); }
+        .stat-item { text-align: center; background: rgba(28, 12, 51, 0.6); padding: 8px; border-radius: 6px; }
+        .stat-item.full-width {
+            grid-column: span 2;
+        }
+        @media (min-width: 600px) {
+            .stat-banner {
+                display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center;
+            }
+            .stat-item.full-width {
+                grid-column: auto;
+                flex: 1;
+            }
+        }
+
+        .stat-val { font-size: 1.3em; font-weight: bold; color: var(--accent-gold); }
         @media (min-width: 768px) { .stat-val { font-size: 1.6em; } }
         .buff-controls { display: flex; gap: 4px; margin-top: 6px; justify-content: center; }
         .buff-btn { padding: 4px 8px; font-size: 0.75em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
         .buff-btn:hover { background: #6b3ca6; }
         .section {
-            background: #200e3a; padding: 18px; border-radius: 8px; margin-bottom: 15px;
+            background: #200e3a; padding: 14px; border-radius: 8px; margin-bottom: 15px;
             border: 1px solid rgba(155, 93, 229, 0.2);
         }
-        label { display: block; margin-top: 8px; font-weight: bold; color: #e0aaff; }
+        label { display: block; margin-top: 8px; font-weight: bold; color: #e0aaff; font-size: 0.9em; }
         .checkbox-container {
-            display: flex; align-items: center; gap: 10px; margin: 15px 0; background: #18092c; padding: 10px; border-radius: 6px;
+            display: flex; align-items: center; gap: 10px; margin: 12px 0; background: #18092c; padding: 10px; border-radius: 6px;
         }
         .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent-unicorn); }
         input[type="text"], input[type="number"] {
@@ -130,8 +148,8 @@
         }
         button {
             background: var(--accent-purple); color: #fff; border: none;
-            padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;
-            transition: 0.2s; margin-right: 5px; margin-top: 5px; font-size: 0.95em;
+            padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;
+            transition: 0.2s; margin-right: 5px; margin-top: 5px; font-size: 0.9em;
             box-shadow: 0 4px 12px rgba(155, 93, 229, 0.3);
         }
         button:hover { opacity: 0.85; filter: brightness(1.1); }
@@ -142,15 +160,15 @@
         button.reset { background: #4a2875; color: #fff; margin-left: 10px; }
         .instruction-card {
             background: #2b124a; border: 2px solid var(--accent-unicorn); color: #ffd1dc;
-            padding: 15px; border-radius: 6px; margin: 10px 0; line-height: 1.5; font-size: 1.05em;
+            padding: 12px; border-radius: 6px; margin: 10px 0; line-height: 1.4; font-size: 0.95em;
         }
         .roll-breakdown {
-            background: #140724; border: 1px dashed #6b3ca6; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; word-break: break-all;
+            background: #140724; border: 1px dashed #6b3ca6; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; word-break: break-all; font-size: 0.9em;
         }
         .alert { background: #4a1535; color: #ffb3d9; padding: 10px; border-radius: 6px; margin-top: 10px; }
         .summary-card {
             background: rgba(42, 157, 143, 0.2); border: 1px solid var(--accent-green);
-            color: #a8ebd9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 1.05em;
+            color: #a8ebd9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.95em;
         }
         .spite-box {
             margin-bottom: 12px; background: rgba(241, 91, 181, 0.15); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-unicorn); border-left: 4px solid var(--accent-unicorn);
@@ -188,7 +206,7 @@
 </div>
 
 <div class="container">
-    <h1>🦄🦄🦄 Jazzy Combat Dashboard 🦄🦄🦄</h1>
+    <h1>🦄 Jazzy Combat Dashboard 🦄</h1>
     <div class="rule-box">
         <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. 1s deal Spite Damage directly! Pay 2 Spite once to enter Berserk. You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR.
     </div>
@@ -252,7 +270,7 @@
                 </div>
             </div>
             <!-- ADDS BANNER ITEM -->
-            <div class="stat-item">
+            <div class="stat-item full-width">
                 <div>Active Adds</div>
                 <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
                 <div class="buff-controls">
@@ -287,9 +305,9 @@
 
             {% if not state.currentSetInfo %}
             <div id="dice-adjust-box" class="inline-dice-ctrl">
-                <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool For This Roll:</label>
+                <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool:</label>
                 <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1" oninput="updateAutoRollButtonText()">
-                <span style="font-size:0.85em; color:#d8b4fe;">(Adjust anytime for buffs/weapon changes)</span>
+                <span style="font-size:0.8em; color:#d8b4fe;">(Adjust anytime)</span>
             </div>
             {% endif %}
 
