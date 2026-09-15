@@ -78,7 +78,7 @@
 <div class="container">
     <h1>🪓 Berserker Combat Dashboard</h1>
     <div class="rule-box">
-        <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR!
+        <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. 1s deal Spite Damage directly! You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR.
     </div>
 
     <!-- SETUP FORM -->
@@ -99,8 +99,8 @@
         <div class="checkbox-container">
             <input type="checkbox" id="has-insane-strength">
             <div>
-                <strong>Character Feat: Insane Strength</strong>
-                <div style="font-size:0.85em; color:#aaa;">"Your STR doubles for the current combat round! Refigure your combat adds."</div>
+                <strong>Character Feat: 3/ Insane Strength</strong>
+                <div style="font-size:0.85em; color:#aaa;">Triggered on 3 Spite (rolling 3 or more 1s): "Your STR doubles for the current combat round! Refigure your combat adds."</div>
             </div>
         </div>
 
@@ -133,7 +133,9 @@
                 <div id="action-text">Roll your weapon dice pool and enter the results separated by spaces.</div>
             </div>
 
-            <div id="insane-strength-box" style="display:none; margin-bottom: 12px;">
+            <div id="insane-strength-box" style="display:none; margin-bottom: 12px; background: rgba(114, 9, 183, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-purple);">
+                <strong style="color: var(--accent-gold);">⚡ 3 SPITE DETECTED (3+ 1s Rolled)!</strong>
+                <div style="margin: 5px 0 8px 0; font-size: 0.9em;">Your Insane Strength feat requirement is met! You may activate it to double your STR for this round.</div>
                 <button class="purple" id="insane-btn" onclick="toggleInsaneStrength()">💪 Activate Insane Strength (Double STR & Recalculate Adds)</button>
             </div>
 
@@ -187,6 +189,7 @@
                     <th>Round</th>
                     <th>Dice Breakdown</th>
                     <th>Dice Total</th>
+                    <th>Spite (1s)</th>
                     <th>Adds</th>
                     <th>Total Damage Dealt</th>
                     <th>STR Lost</th>
@@ -213,6 +216,7 @@
         roundNum: 1,
         expectedDice: 8,
         currentDiceSum: 0,
+        currentSpiteTotal: 0,
         finalDamageThisRound: 0,
         pendingSets: [],
         currentSetInfo: null,
@@ -234,10 +238,6 @@
         document.getElementById('setup-section').style.display = 'none';
         document.getElementById('combat-section').style.display = 'block';
         
-        if (state.hasInsaneStrengthFeat) {
-            document.getElementById('insane-strength-box').style.display = 'block';
-        }
-
         resetRoundState();
         updateDisplay();
     }
@@ -257,13 +257,14 @@
 
     function resetRoundState() {
         state.insaneStrengthActive = false;
-        if (state.hasInsaneStrengthFeat) {
-            const btn = document.getElementById('insane-btn');
-            btn.style.background = "var(--accent-purple)";
-            btn.innerText = "💪 Activate Insane Strength (Double STR & Recalculate Adds)";
-        }
+        document.getElementById('insane-strength-box').style.display = 'none';
+        const btn = document.getElementById('insane-btn');
+        btn.style.background = "var(--accent-purple)";
+        btn.innerText = "💪 Activate Insane Strength (Double STR & Recalculate Adds)";
+
         state.expectedDice = state.activeWeaponDice;
         state.currentDiceSum = 0;
+        state.currentSpiteTotal = 0;
         state.finalDamageThisRound = 0;
         state.pendingSets = [];
         state.currentSetInfo = null;
@@ -283,7 +284,6 @@
 
     function getEffectiveAdds() {
         if (state.insaneStrengthActive) {
-            // Insane Strength doubles current STR for the round and adds the extra STR directly to Combat Adds
             return state.currentAdds + state.currentStr;
         }
         return state.currentAdds;
@@ -302,7 +302,7 @@
         const box = document.getElementById('breakdown-box');
         const text = document.getElementById('breakdown-text');
         box.style.display = 'block';
-        text.innerHTML = state.rollHistory.map(h => `<div>• <strong>${h.phase}:</strong> [${h.dice.join(', ')}] = sum of ${h.sum}</div>`).join('');
+        text.innerHTML = state.rollHistory.map(h => `<div>• <strong>${h.phase}:</strong> [${h.dice.join(', ')}] = sum of ${h.sum} <span style="color:var(--accent-red); font-weight:bold;">(${h.spite} Spite)</span></div>`).join('');
     }
 
     async function submitDamage(autoRoll) {
@@ -315,6 +315,7 @@
             dice_input: inputVal,
             expected_dice: state.expectedDice,
             current_dice_sum: state.currentDiceSum,
+            current_spite_total: state.currentSpiteTotal,
             roll_history: state.rollHistory,
             current_adds: getEffectiveAdds(),
             pending_sets: state.pendingSets,
@@ -336,8 +337,13 @@
         }
 
         state.currentDiceSum = data.current_dice_sum;
+        state.currentSpiteTotal = data.current_spite_total;
         state.rollHistory = data.roll_history;
         renderBreakdown();
+
+        if (state.hasInsaneStrengthFeat && data.spite_triggered && !state.insaneStrengthActive) {
+            document.getElementById('insane-strength-box').style.display = 'block';
+        }
 
         if (data.status === 'rollover') {
             state.pendingSets = data.pending_sets;
@@ -375,6 +381,7 @@
             round_num: state.roundNum,
             final_damage: state.finalDamageThisRound,
             dice_sum: state.currentDiceSum,
+            spite_total: state.currentSpiteTotal,
             roll_history: state.rollHistory,
             history_log: state.historyLog,
             insane_strength_active: state.insaneStrengthActive
@@ -431,6 +438,7 @@
                 <td>${row.round}</td>
                 <td style="text-align:left; font-size:0.85em;">${row.dice_breakdown}</td>
                 <td>${row.dice_sum}</td>
+                <td style="font-weight:bold; color:var(--accent-red);">${row.spite}</td>
                 <td>+${row.adds}</td>
                 <td style="font-weight:bold; color:var(--accent-gold);">${row.total_damage}</td>
                 <td>-${row.str_lost}</td>

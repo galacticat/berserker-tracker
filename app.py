@@ -40,6 +40,7 @@ def roll_damage():
     dice_input = data.get('dice_input', '')
     expected_dice = int(data.get('expected_dice', 3))
     current_dice_sum = int(data.get('current_dice_sum', 0))
+    current_spite_total = int(data.get('current_spite_total', 0))
     roll_history = data.get('roll_history', [])
     current_adds = int(data.get('current_adds', 0))
     pending_sets = data.get('pending_sets', [])
@@ -59,6 +60,11 @@ def roll_damage():
     dice_sum = sum(dice)
     new_dice_sum = current_dice_sum + dice_sum
     
+    # Track 1s rolled in this specific roll phase and add to total spite
+    phase_spite = dice.count(1)
+    new_spite_total = current_spite_total + phase_spite
+    spite_triggered = new_spite_total >= 3
+    
     if current_set_info:
         phase_label = f"Roll-Over for {current_set_info['description']}"
     else:
@@ -67,7 +73,8 @@ def roll_damage():
     roll_history.append({
         'phase': phase_label,
         'dice': dice,
-        'sum': dice_sum
+        'sum': dice_sum,
+        'spite': phase_spite
     })
     
     new_exploding_sets = analyze_roll(dice)
@@ -84,11 +91,13 @@ def roll_damage():
             'status': 'rollover',
             'rolled_dice': dice,
             'current_dice_sum': new_dice_sum,
+            'current_spite_total': new_spite_total,
             'pending_sets': all_pending_sets,
             'current_set_info': next_set,
             'expected_dice': next_set['count'],
             'action_instruction': action_instruction,
             'roll_history': roll_history,
+            'spite_triggered': spite_triggered,
             'message': f"🔥 BERSERK EXPLOSION! Resolving {next_set['description']} ({next_set['count']} dice)."
         })
     else:
@@ -97,9 +106,11 @@ def roll_damage():
             'status': 'damage_done',
             'rolled_dice': dice,
             'current_dice_sum': new_dice_sum,
+            'current_spite_total': new_spite_total,
             'final_total': final_total,
             'roll_history': roll_history,
-            'message': f"✅ All damage dice sets resolved! Total Dice Sum: {new_dice_sum} + Adds (+{current_adds}) = {final_total} Total Damage."
+            'spite_triggered': spite_triggered,
+            'message': f"✅ Damage resolved! Dice Sum: {new_dice_sum} + Adds (+{current_adds}) = {final_total} Total Damage. 🎯 Spite Damage Dealt: {new_spite_total}."
         })
 
 @app.route('/api/roll_str_loss', methods=['POST'])
@@ -116,6 +127,7 @@ def roll_str_loss():
     round_num = int(data.get('round_num', 1))
     final_damage = int(data.get('final_damage', 0))
     dice_sum = int(data.get('dice_sum', 0))
+    spite_total = int(data.get('spite_total', 0))
     roll_history = data.get('roll_history', [])
     history_log = data.get('history_log', [])
     insane_strength_active = data.get('insane_strength_active', False)
@@ -128,7 +140,6 @@ def roll_str_loss():
         except (ValueError, TypeError):
             return jsonify({'status': 'error', 'message': 'Please enter a valid number from 1 to 6.'}), 400
 
-    # Subtract loss from base current STR
     new_str = max(0, current_str - str_lost)
     new_adds = max(0, current_adds - str_lost)
     
@@ -143,12 +154,13 @@ def roll_str_loss():
 
     rolls_summary = " ➔ ".join([f"{r['phase']}: {r['dice']} (={r['sum']})" for r in roll_history])
     if insane_strength_active:
-        rolls_summary += " [💪 INSANE STRENGTH ACTIVE]"
+        rolls_summary += " [💪 INSANE STRENGTH TRIGGERED]"
 
     log_entry = {
         'round': round_num,
         'dice_breakdown': rolls_summary,
         'dice_sum': dice_sum,
+        'spite': spite_total,
         'adds': current_adds,
         'total_damage': final_damage,
         'str_lost': str_lost,
