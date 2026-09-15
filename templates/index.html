@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monsters! Monsters! Berserker Tracker</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-bg: #1e1e24;
+            --accent-red: #e63946;
+            --accent-gold: #ffb703;
+            --accent-green: #2a9d8f;
+            --text-color: #f1faee;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 20px;
+            display: flex; justify-content: center;
+        }
+        .container {
+            width: 100%; max-width: 950px;
+            background: var(--card-bg);
+            padding: 25px; border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        h1 { color: var(--accent-red); text-align: center; margin-top: 0; }
+        .rule-box {
+            background: rgba(230, 57, 70, 0.15);
+            border-left: 4px solid var(--accent-red);
+            padding: 12px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em;
+        }
+        .stat-banner {
+            display: flex; justify-content: space-around;
+            background: #2b2b36; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+        }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 1.6em; font-weight: bold; color: var(--accent-gold); }
+        .section {
+            background: #252530; padding: 18px; border-radius: 8px; margin-bottom: 15px;
+        }
+        label { display: block; margin-top: 8px; font-weight: bold; }
+        input[type="text"], input[type="number"] {
+            background: #121214; border: 1px solid #444; color: #fff;
+            padding: 10px 12px; border-radius: 4px; width: calc(100% - 26px); margin-bottom: 10px; font-size: 1em;
+        }
+        button {
+            background: var(--accent-red); color: #fff; border: none;
+            padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;
+            transition: 0.2s; margin-right: 5px; margin-top: 5px; font-size: 0.95em;
+        }
+        button:hover { opacity: 0.85; }
+        button.alt { background: var(--accent-green); }
+        button.gold { background: var(--accent-gold); color: #000; }
+        .instruction-card {
+            background: #382419; border: 2px solid var(--accent-gold); color: #ffe3a8;
+            padding: 15px; border-radius: 6px; margin: 10px 0; line-height: 1.5; font-size: 1.05em;
+        }
+        .roll-breakdown {
+            background: #181820; border: 1px dashed #555; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace;
+        }
+        .alert { background: #3d1c1d; color: #ff8e8e; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: center; }
+        th { background: #1a1a20; color: var(--accent-gold); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🪓 Berserker Combat Dashboard</h1>
+    <div class="rule-box">
+        <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! No ranged attacks allowed. Must attack a target each round. You lose 1d6 STR per round, which dynamically lowers your combat adds!
+    </div>
+
+    <!-- SETUP FORM -->
+    <div id="setup-section" class="section">
+        <h3>Character & Weapon Setup</h3>
+        <label>Starting / Max Strength (STR):</label>
+        <input type="number" id="max-str" value="40" min="1">
+        
+        <label>Weapon Damage Dice Pool (e.g. 8 for 8d6 weapon):</label>
+        <input type="number" id="weapon-dice" value="8" min="1">
+
+        <label>Current Combat Adds (Bonus Damage):</label>
+        <input type="number" id="initial-adds" value="55" min="0">
+
+        <button onclick="startCombat()">Begin Berserking Combat</button>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="combat-section" style="display: none;">
+        <div class="stat-banner">
+            <div class="stat-item">
+                <div>Round</div>
+                <div class="stat-val" id="disp-round">1</div>
+            </div>
+            <div class="stat-item">
+                <div>Strength (STR)</div>
+                <div class="stat-val" id="disp-str">40 / 40</div>
+            </div>
+            <div class="stat-item">
+                <div>Active Adds</div>
+                <div class="stat-val" id="disp-adds">+55</div>
+            </div>
+        </div>
+
+        <!-- DAMAGE PHASE -->
+        <div id="damage-panel" class="section">
+            <h3 id="damage-title">Step 1: Roll Weapon Damage</h3>
+            
+            <!-- STEP BY STEP ACTION INSTRUCTION -->
+            <div id="action-box" class="instruction-card">
+                <strong>📋 WHAT TO DO NOW:</strong>
+                <div id="action-text">Roll your weapon dice pool and enter the results separated by spaces.</div>
+            </div>
+
+            <!-- LIVE ROLL BREAKDOWN -->
+            <div id="breakdown-box" class="roll-breakdown" style="display:none;">
+                <strong>🎲 Current Round Rolls:</strong>
+                <div id="breakdown-text"></div>
+            </div>
+
+            <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4">
+            <div>
+                <button onclick="submitDamage(false)">Submit Manual Roll</button>
+                <button class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll Dice</button>
+            </div>
+            <div id="damage-alert" class="alert" style="display:none;"></div>
+        </div>
+
+        <!-- STR LOSS PHASE -->
+        <div id="str-panel" class="section" style="display:none;">
+            <h3>Step 2: Berserk Exhaustion (STR & Adds Reduction)</h3>
+            <div class="instruction-card">
+                <strong>📋 WHAT TO DO NOW:</strong>
+                <div>Roll 1d6 to determine your STR reduction for this round. Your combat adds will decrease by this exact amount next round!</div>
+            </div>
+            <input type="number" id="str-loss-input" placeholder="e.g. 4" min="1" max="6">
+            <div>
+                <button onclick="submitStrLoss(false)">Submit 1d6 Loss</button>
+                <button class="alt" onclick="submitStrLoss(true)">Auto-Roll 1d6 Loss</button>
+            </div>
+        </div>
+
+        <!-- END ROUND / CALM DOWN PHASE -->
+        <div id="round-end-panel" class="section" style="display:none;">
+            <h3>Step 3: End of Round Options</h3>
+            <p>Did you make an IQ Saving Roll or did someone use a helping stunt to calm you down?</p>
+            <button class="gold" onclick="nextRound(true)">Yes, Stop Berserking</button>
+            <button onclick="nextRound(false)">No, Continue Berserking Next Round</button>
+        </div>
+
+        <!-- SUMMARY PANEL -->
+        <div id="summary-panel" class="section" style="display:none;">
+            <h3 style="color:var(--accent-gold);">Combat Finished</h3>
+            <p id="summary-msg"></p>
+        </div>
+
+        <!-- LOG TABLE -->
+        <h3>📜 Combat Log & Adds Tracking</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Round</th>
+                    <th>Dice Breakdown</th>
+                    <th>Dice Total</th>
+                    <th>Adds</th>
+                    <th>Total Damage Dealt</th>
+                    <th>STR Lost</th>
+                    <th>STR Left</th>
+                    <th>Adds Next Round</th>
+                </tr>
+            </thead>
+            <tbody id="history-table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let globalWeaponDice = 8;
+    let pendingExtraDice = 0;
+
+    async function startCombat() {
+        const maxStr = document.getElementById('max-str').value;
+        const weaponDice = document.getElementById('weapon-dice').value;
+        const initialAdds = document.getElementById('initial-adds').value;
+        globalWeaponDice = parseInt(weaponDice);
+
+        const res = await fetch('/api/start', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                max_str: maxStr,
+                weapon_dice: weaponDice,
+                initial_adds: initialAdds
+            })
+        });
+        const data = await res.json();
+        
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('combat-section').style.display = 'block';
+        updateStats(data.round_num, data.current_str, data.max_str, data.current_adds);
+        resetPanels();
+    }
+
+    function updateStats(round, str, maxStr, adds) {
+        document.getElementById('disp-round').innerText = round;
+        document.getElementById('disp-str').innerText = `${str} / ${maxStr}`;
+        document.getElementById('disp-adds').innerText = `+${adds}`;
+    }
+
+    function resetPanels() {
+        pendingExtraDice = globalWeaponDice;
+        document.getElementById('damage-panel').style.display = 'block';
+        document.getElementById('str-panel').style.display = 'none';
+        document.getElementById('round-end-panel').style.display = 'none';
+        document.getElementById('damage-alert').style.display = 'none';
+        document.getElementById('breakdown-box').style.display = 'none';
+        
+        document.getElementById('damage-title').innerText = "Step 1: Roll Weapon Damage";
+        document.getElementById('action-text').innerHTML = `Roll your <strong>${globalWeaponDice} weapon dice</strong> and enter the ${globalWeaponDice} values separated by spaces.`;
+        document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${globalWeaponDice}d6`;
+        document.getElementById('dice-input').value = "";
+    }
+
+    function renderBreakdown(history) {
+        const box = document.getElementById('breakdown-box');
+        const text = document.getElementById('breakdown-text');
+        box.style.display = 'block';
+        text.innerHTML = history.map(h => `<div>• <strong>${h.phase}:</strong> [${h.dice.join(', ')}] = sum of ${h.sum}</div>`).join('');
+    }
+
+    async function submitDamage(autoRoll) {
+        const inputVal = document.getElementById('dice-input').value;
+        const alertBox = document.getElementById('damage-alert');
+        alertBox.style.display = 'none';
+
+        const res = await fetch('/api/roll_damage', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ auto_roll: autoRoll, dice_input: inputVal })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            alertBox.style.display = 'block';
+            alertBox.innerText = data.message;
+            return;
+        }
+
+        renderBreakdown(data.roll_history);
+
+        if (data.status === 'rollover') {
+            pendingExtraDice = data.pending_extra_dice;
+            document.getElementById('damage-title').innerText = "🔥 BERSERK ROLL-OVER EXPLOSION!";
+            document.getElementById('action-text').innerHTML = `
+                <strong>${data.message}</strong><br><br>
+                👉 <strong>ACTION REQUIRED:</strong> ${data.action_instruction}
+            `;
+            document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${pendingExtraDice}d6 Extra`;
+            document.getElementById('dice-input').value = "";
+        } else if (data.status === 'damage_done') {
+            alertBox.style.display = 'block';
+            alertBox.innerText = data.message;
+            setTimeout(() => {
+                document.getElementById('damage-panel').style.display = 'none';
+                document.getElementById('str-panel').style.display = 'block';
+            }, 1200);
+        }
+    }
+
+    async function submitStrLoss(autoRoll) {
+        const lossVal = document.getElementById('str-loss-input').value;
+        const res = await fetch('/api/roll_str_loss', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ auto_roll: autoRoll, loss_val: lossVal })
+        });
+        const data = await res.json();
+        
+        renderHistory(data.history);
+        document.getElementById('str-panel').style.display = 'none';
+        const maxStr = document.getElementById('max-str').value;
+        updateStats(document.getElementById('disp-round').innerText, data.current_str, maxStr, data.current_adds);
+
+        if (data.status === 'unconscious') {
+            showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
+        } else {
+            document.getElementById('round-end-panel').style.display = 'block';
+        }
+    }
+
+    async function nextRound(stopped) {
+        const res = await fetch('/api/next_round', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ stopped: stopped })
+        });
+        const data = await res.json();
+
+        if (data.status === 'stopped') {
+            document.getElementById('round-end-panel').style.display = 'none';
+            showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
+        } else {
+            const maxStr = document.getElementById('max-str').value;
+            updateStats(data.round_num, data.current_str, maxStr, data.current_adds);
+            resetPanels();
+        }
+    }
+
+    function renderHistory(history) {
+        const tbody = document.getElementById('history-table-body');
+        tbody.innerHTML = history.map(row => `
+            <tr>
+                <td>${row.round}</td>
+                <td style="text-align:left; font-size:0.85em;">${row.dice_breakdown}</td>
+                <td>${row.dice_sum}</td>
+                <td>+${row.adds}</td>
+                <td style="font-weight:bold; color:var(--accent-gold);">${row.total_damage}</td>
+                <td>-${row.str_lost}</td>
+                <td>${row.str_remaining}</td>
+                <td>+${row.adds_next}</td>
+            </tr>
+        `).join('');
+    }
+
+    function showSummary(msg) {
+        document.getElementById('summary-panel').style.display = 'block';
+        document.getElementById('summary-msg').innerText = msg;
+    }
+</script>
+</body>
+</html>
