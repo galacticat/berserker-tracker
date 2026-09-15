@@ -276,7 +276,7 @@
         historyLog: []
     };
 
-    const STORAGE_KEY = 'mm_berserker_state';
+    const STORAGE_KEY = 'mm_berserker_state_v3';
 
     function saveStateToCache() {
         try {
@@ -286,17 +286,19 @@
         }
     }
 
-    function loadStateFromCache() {
+    function restoreUI() {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return false;
-        
+        if (!saved) return;
+
         try {
             const loaded = JSON.parse(saved);
             if (loaded && loaded.inCombat) {
                 state = loaded;
 
-                document.getElementById('setup-section').style.display = 'none';
-                document.getElementById('combat-section').style.display = 'block';
+                const setupSec = document.getElementById('setup-section');
+                const combatSec = document.getElementById('combat-section');
+                if (setupSec) setupSec.style.display = 'none';
+                if (combatSec) combatSec.style.display = 'block';
 
                 updateDisplay();
                 renderHistory();
@@ -319,12 +321,10 @@
                     document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
                     updateFeatVisibility();
                 }
-                return true;
             }
         } catch (e) {
-            console.error("Failed to load persistence state", e);
+            console.error("Failed to restore state", e);
         }
-        return false;
     }
 
     function clearCombatStorage() {
@@ -711,11 +711,9 @@
         saveStateToCache();
     }
 
-    loadStateFromCache();
-
-    window.addEventListener('load', function() {
-        loadStateFromCache();
-    });
+    // Run immediately when DOM is ready
+    restoreUI();
+    window.addEventListener('load', restoreUI);
 </script>
 </body>
 </html>
