@@ -705,6 +705,14 @@
         const rawVal = diceInputEl.value.trim();
         const parts = rawVal === '' ? [] : rawVal.replace(/,/g, ' ').split(/\s+/);
 
+        // If the box is completely empty, disable submit button but keep alert hidden
+        if (parts.length === 0) {
+            alertBox.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('disabled');
+            return false;
+        }
+
         // Check for individual value errors (greater than 6 or less than 1)
         for (let p of parts) {
             if (p !== '') {
