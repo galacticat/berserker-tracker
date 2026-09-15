@@ -1,236 +1,335 @@
-from flask import Flask, render_template, request, jsonify
+import os
 import random
+from collections import Counter
+from flask import Flask, render_template, request, jsonify, session
+from flask_session import Session
 
 app = Flask(__name__)
 
-def parse_dice(dice_str):
-    try:
-        return [int(x.strip()) for x in dice_str.replace(',', ' ').split() if x.strip() and x.strip().isdigit()]
-    except ValueError:
-        return []
+# Session Configuration
+app.config['SECRET_KEY'] = 'berserker_secret_key_fixed_98765'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = True
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+Session(app)
 
-def analyze_roll(dice):
-    if len(dice) < 2:
-        return []
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+def get_default_state():
+    return {
+        'inCombat': False,
+        'maxStr': 40,
+        'currentStr': 40,
+        'baseWeaponDice': 8,
+        'activeWeaponDice': 8,
+        'minStrReq': 15,
+        'currentAdds': 55,
+        'berserkActive': False,
+        'hasInsaneStrengthFeat': True,
+        'insaneStrengthActive': False,
+        'spentSpiteThisRound': 0,
+        'roundNum': 1,
+        'expectedDice': 8,
+        'currentDiceSum': 0,
+        'currentSpiteTotal': 0,
+        'finalDamageThisRound': 0,
+        'lastDamageMessage': "",
+        'damageResolvedThisRound': False,
+        'pendingSets': [],
+        'currentSetInfo': None,
+        'rollHistory': [],
+        'historyLog': [],
+        'activePhase': 'damage'
+    }
+
+def get_state():
+    if 'state' not in session:
+        session['state'] = get_default_state()
+    return session['state']
+
+def save_state(state):
+    session['state'] = state
+    session.modified = True
+
+def parse_dice_input(input_str, expected_count):
+    parts = input_str.strip().replace(',', ' ').split()
+    if len(parts) != expected_count:
+        return None, f"Expected exactly {expected_count} dice values, but got {len(parts)}."
     
-    counts = {}
-    for die in dice:
-        counts[die] = counts.get(die, 0) + 1
-        
-    exploding_sets = []
-    for val, count in sorted(counts.items()):
-        if count >= 2:
-            set_type = "Doubles" if count == 2 else "Triples" if count == 3 else f"{count}-of-a-kind"
-            exploding_sets.append({
-                'value': val,
-                'count': count,
-                'description': f"{set_type} of [{val}]s"
-            })
-            
-    return exploding_sets
+    dice = []
+    for p in parts:
+        try:
+            val = int(p)
+            if val < 1 or val > 6:
+                return None, f"Dice value '{p}' is invalid. Must be between 1 and 6."
+            dice.append(val)
+        except ValueError:
+            return None, f"Invalid value '{p}'. Must be numbers between 1 and 6."
+    
+    return dice, None
+
+def count_spite(dice_list):
+    return dice_list.count(1)
+
+def find_sets(dice_list):
+    counts = Counter(dice_list)
+    sets = []
+    for val, cnt in counts.items():
+        if val != 1 and cnt >= 2:
+            sets.append({'val': val, 'count': cnt})
+    return sets
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    state = get_state()
+    return render_template('index.html', state=state)
+
+@app.route('/api/start_combat', methods=['POST'])
+def start_combat():
+    data = request.json
+    state = get_default_state()
+    state['inCombat'] = True
+    state['maxStr'] = int(data.get('max_str', 40))
+    state['currentStr'] = state['maxStr']
+    state['baseWeaponDice'] = int(data.get('base_weapon_dice', 8))
+    state['activeWeaponDice'] = state['baseWeaponDice']
+    state['minStrReq'] = int(data.get('min_str_req', 15))
+    state['currentAdds'] = int(data.get('initial_adds', 55))
+    state['berserkActive'] = bool(data.get('already_berserk', False))
+    state['hasInsaneStrengthFeat'] = bool(data.get('has_insane_strength', True))
+    state['expectedDice'] = state['baseWeaponDice']
+    state['activePhase'] = 'damage'
+
+    save_state(state)
+    return jsonify({'status': 'ok', 'state': state})
 
 @app.route('/api/roll_damage', methods=['POST'])
 def roll_damage():
-    data = request.json or {}
+    state = get_state()
+    data = request.json
     auto_roll = data.get('auto_roll', False)
-    dice_input = data.get('dice_input', '')
-    expected_dice = int(data.get('expected_dice', 3))
-    current_dice_sum = int(data.get('current_dice_sum', 0))
-    current_spite_total = int(data.get('current_spite_total', 0))
-    spent_spite = int(data.get('spent_spite', 0))
-    berserk_active = data.get('berserk_active', False)
-    insane_strength_active = data.get('insane_strength_active', False)
-    roll_history = data.get('roll_history', [])
-    current_adds = int(data.get('current_adds', 0))
-    pending_sets = data.get('pending_sets', [])
-    current_set_info = data.get('current_set_info', None)
     
+    if not state['currentSetInfo']:
+        state['expectedDice'] = int(data.get('expected_dice', state['expectedDice']))
+
     if auto_roll:
-        dice = [random.randint(1, 6) for _ in range(expected_dice)]
+        dice = [random.randint(1, 6) for _ in range(state['expectedDice'])]
     else:
-        dice = parse_dice(dice_input)
-        
-    if len(dice) != expected_dice:
-        return jsonify({
-            'status': 'error', 
-            'message': f'⚠️ Incorrect number of dice! You must enter exactly {expected_dice} dice values for this set.'
-        }), 400
+        dice_input = data.get('dice_input', '')
+        dice, err = parse_dice_input(dice_input, state['expectedDice'])
+        if err:
+            return jsonify({'message': err}), 400
 
-    dice_sum = sum(dice)
-    new_dice_sum = current_dice_sum + dice_sum
+    roll_sum = sum(dice)
+    spite = count_spite(dice)
     
-    phase_spite = dice.count(1)
-    new_spite_total = current_spite_total + phase_spite
-    
-    total_spent = spent_spite + (3 if insane_strength_active else 0)
-    available_spite_for_feats = max(0, new_spite_total - total_spent)
-    
-    spite_triggered = available_spite_for_feats >= 3
-    can_spend_for_berserk = (available_spite_for_feats >= 2) and (not berserk_active) and (spent_spite == 0)
-    
-    if current_set_info:
-        phase_label = f"Roll-Over for {current_set_info['description']}"
-    else:
-        phase_label = "Base Weapon Roll"
+    state['currentDiceSum'] += roll_sum
+    state['currentSpiteTotal'] += spite
 
-    roll_history.append({
-        'phase': phase_label,
+    phase_name = "Base Weapon Roll" if not state['currentSetInfo'] else f"Roll-Over for Sets of [{state['currentSetInfo']['val']}]s"
+    state['rollHistory'].append({
+        'phase': phase_name,
         'dice': dice,
-        'sum': dice_sum,
-        'spite': phase_spite
+        'sum': roll_sum,
+        'spite': spite
     })
-    
-    # Analyze ONLY this roll's dice for new set explosions if Berserk is active
-    if berserk_active:
-        new_exploding_sets = analyze_roll(dice)
-        all_pending_sets = pending_sets + new_exploding_sets
-    else:
-        all_pending_sets = []
 
-    if len(all_pending_sets) > 0:
-        next_set = all_pending_sets.pop(0)
-        action_instruction = (
-            f" Pick up ONLY the {next_set['count']} dice for {next_set['description']}. "
-            f"Roll those exact {next_set['count']} dice and enter their values below."
-        )
-        
-        return jsonify({
-            'status': 'rollover',
-            'rolled_dice': dice,
-            'current_dice_sum': new_dice_sum,
-            'current_spite_total': new_spite_total,
-            'available_spite_for_feats': available_spite_for_feats,
-            'can_spend_for_berserk': can_spend_for_berserk,
-            'pending_sets': all_pending_sets,
-            'current_set_info': next_set,
-            'expected_dice': next_set['count'],
-            'action_instruction': action_instruction,
-            'roll_history': roll_history,
-            'spite_triggered': spite_triggered,
-            'message': f"🔥 BERSERK EXPLOSION! Resolving {next_set['description']} ({next_set['count']} dice)."
-        })
+    if state['berserkActive']:
+        sets = find_sets(dice)
+        if sets:
+            state['pendingSets'].extend(sets)
+
+        if state['pendingSets']:
+            next_set = state['pendingSets'].pop(0)
+            state['currentSetInfo'] = next_set
+            state['expectedDice'] = next_set['count']
+            state['activePhase'] = 'damage'
+            save_state(state)
+            
+            return jsonify({
+                'status': 'rollover',
+                'message': f"Matching set found! You rolled {next_set['count']}x [{next_set['val']}s]. Roll {next_set['count']} additional dice!",
+                'action_instruction': f"Roll {next_set['count']} additional d6 for your matching set of {next_set['val']}s.",
+                'state': state
+            })
+
+    effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
+    final_total = state['currentDiceSum'] + effective_adds
+    state['finalDamageThisRound'] = final_total
+    state['damageResolvedThisRound'] = True
+    
+    spite_msg = f" (Dealt {state['currentSpiteTotal']} direct Spite Damage!)" if state['currentSpiteTotal'] > 0 else ""
+    state['lastDamageMessage'] = f"Rolled a total dice sum of {state['currentDiceSum']} + {effective_adds} adds = {final_total} Total Damage!{spite_msg}"
+
+    if state['berserkActive']:
+        state['activePhase'] = 'str_loss'
     else:
-        final_total = new_dice_sum + current_adds
-        return jsonify({
-            'status': 'damage_done',
-            'rolled_dice': dice,
-            'current_dice_sum': new_dice_sum,
-            'current_spite_total': new_spite_total,
-            'available_spite_for_feats': available_spite_for_feats,
-            'can_spend_for_berserk': can_spend_for_berserk,
-            'final_total': final_total,
-            'roll_history': roll_history,
-            'spite_triggered': spite_triggered,
-            'message': f"✅ Damage resolved! Dice Sum: {new_dice_sum} + Adds (+{current_adds}) = {final_total} Total Damage. 🎯 Spite Damage Dealt: {new_spite_total}."
-        })
+        state['activePhase'] = 'damage'
+
+    save_state(state)
+    return jsonify({
+        'status': 'damage_done',
+        'final_total': final_total,
+        'message': state['lastDamageMessage'],
+        'state': state
+    })
 
 @app.route('/api/activate_berserk', methods=['POST'])
 def activate_berserk():
-    data = request.json or {}
-    roll_history = data.get('roll_history', [])
+    state = get_state()
+    state['spentSpiteThisRound'] = 2
+    state['berserkActive'] = True
     
-    if not roll_history:
-        return jsonify({'status': 'no_sets', 'pending_sets': []})
-    
-    base_roll = roll_history[0]['dice']
-    exploding_sets = analyze_roll(base_roll)
-    
-    if len(exploding_sets) > 0:
-        next_set = exploding_sets.pop(0)
-        action_instruction = (
-            f" Pick up ONLY the {next_set['count']} dice for {next_set['description']}. "
-            f"Roll those exact {next_set['count']} dice and enter their values below."
-        )
+    all_sets = []
+    for h in state['rollHistory']:
+        all_sets.extend(find_sets(h['dice']))
+
+    if all_sets:
+        state['pendingSets'] = all_sets
+        next_set = state['pendingSets'].pop(0)
+        state['currentSetInfo'] = next_set
+        state['expectedDice'] = next_set['count']
+        state['damageResolvedThisRound'] = False
+        state['activePhase'] = 'damage'
+        save_state(state)
+
         return jsonify({
             'status': 'rollover',
-            'pending_sets': exploding_sets,
-            'current_set_info': next_set,
-            'expected_dice': next_set['count'],
-            'action_instruction': action_instruction,
-            'message': f"🔥 BERSERK ACTIVATED IMMEDIATELY! Resolving {next_set['description']} ({next_set['count']} dice)."
+            'message': f"💥 BERSERK ACTIVATED! Retroactive Matching set found: {next_set['count']}x [{next_set['val']}s]. Roll {next_set['count']} additional dice!",
+            'action_instruction': f"Roll {next_set['count']} additional d6 for your set of {next_set['val']}s.",
+            'state': state
         })
-    else:
-        return jsonify({'status': 'no_sets', 'pending_sets': []})
+
+    if state['damageResolvedThisRound']:
+        state['activePhase'] = 'str_loss'
+    
+    save_state(state)
+    return jsonify({'status': 'activated', 'state': state})
+
+@app.route('/api/toggle_insane_strength', methods=['POST'])
+def toggle_insane_strength():
+    state = get_state()
+    state['insaneStrengthActive'] = not state['insaneStrengthActive']
+    save_state(state)
+    return jsonify({'status': 'ok', 'state': state})
 
 @app.route('/api/roll_str_loss', methods=['POST'])
 def roll_str_loss():
-    data = request.json or {}
+    state = get_state()
+    data = request.json
     auto_roll = data.get('auto_roll', False)
-    loss_val = data.get('loss_val', None)
-    
-    current_str = int(data.get('current_str', 18))
-    max_str = int(data.get('max_str', 18))
-    current_adds = int(data.get('current_adds', 0))
-    min_str_req = int(data.get('min_str_req', 15))
-    base_weapon_dice = int(data.get('base_weapon_dice', 8))
-    round_num = int(data.get('round_num', 1))
-    final_damage = int(data.get('final_damage', 0))
-    dice_sum = int(data.get('dice_sum', 0))
-    spite_total = int(data.get('spite_total', 0))
-    spent_spite = int(data.get('spent_spite', 0))
-    berserk_active = data.get('berserk_active', False)
-    roll_history = data.get('roll_history', [])
-    history_log = data.get('history_log', [])
-    insane_strength_active = data.get('insane_strength_active', False)
 
-    if not berserk_active:
-        str_lost = 0
-    elif auto_roll:
+    if auto_roll:
         str_lost = random.randint(1, 6)
     else:
         try:
-            str_lost = int(loss_val)
-        except (ValueError, TypeError):
-            return jsonify({'status': 'error', 'message': 'Please enter a valid number from 1 to 6.'}), 400
+            str_lost = int(data.get('loss_val', 0))
+            if str_lost < 1 or str_lost > 6:
+                return jsonify({'message': 'STR loss must be between 1 and 6.'}), 400
+        except ValueError:
+            return jsonify({'message': 'Invalid STR loss number.'}), 400
 
-    new_str = max(0, current_str - str_lost)
-    new_adds = max(0, current_adds - str_lost)
-    
-    if new_str < min_str_req:
-        str_deficit = min_str_req - new_str
-        dice_penalty = (str_deficit + 1) // 2
-        effective_dice = max(1, base_weapon_dice - dice_penalty)
-        warning_msg = f"⚠️ STR dropped to {new_str} (below required {min_str_req})! Next round weapon dice reduced to {effective_dice}d6."
+    new_str = max(0, state['currentStr'] - str_lost)
+    state['currentStr'] = new_str
+
+    if not state['berserkActive']:
+        new_adds = state['currentAdds']
+        adds_change_text = f"+{new_adds}"
     else:
-        effective_dice = base_weapon_dice
-        warning_msg = None
+        new_adds = max(0, state['currentAdds'] - str_lost)
+        adds_change_text = f"+{new_adds} (-{str_lost})"
+        state['currentAdds'] = new_adds
 
-    rolls_summary = " ➔ ".join([f"{r['phase']}: {r['dice']} (={r['sum']})" for r in roll_history])
-    if spent_spite > 0:
-        rolls_summary += f" [🔥 Activated Berserk (2 Spite)]"
-    if insane_strength_active:
-        rolls_summary += " [💪 INSANE STRENGTH ACTIVE]"
+    effective_dice = state['baseWeaponDice']
+    warning_msg = None
 
-    log_entry = {
-        'round': round_num,
-        'dice_breakdown': rolls_summary,
-        'dice_sum': dice_sum,
-        'spite': spite_total,
-        'adds': current_adds,
-        'total_damage': final_damage,
-        'str_lost': str_lost,
+    if new_str < state['minStrReq']:
+        deficit = state['minStrReq'] - new_str
+        effective_dice = max(1, state['baseWeaponDice'] - deficit)
+        warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon requirement ({state['minStrReq']})! Dice pool reduced from {state['baseWeaponDice']}d6 to {effective_dice}d6."
+
+    state['activeWeaponDice'] = effective_dice
+
+    breakdown_strs = []
+    for h in state['rollHistory']:
+        breakdown_strs.append(f"{h['phase']}: [{', '.join(map(str, h['dice']))}] (={h['sum']})")
+    
+    if state['spentSpiteThisRound'] > 0:
+        breakdown_strs.append(f"[🔥 Activated Berserk ({state['spentSpiteThisRound']} Spite)]")
+
+    history_entry = {
+        'round': state['roundNum'],
+        'dice_breakdown': " ➔ ".join(breakdown_strs),
+        'dice_sum': state['currentDiceSum'],
+        'spite': state['currentSpiteTotal'],
+        'adds': f"+{state['currentAdds'] + str_lost}" if state['berserkActive'] else f"+{state['currentAdds']}",
+        'total_damage': state['finalDamageThisRound'],
+        'str_lost': str_lost if state['berserkActive'] else 0,
         'str_remaining': new_str,
-        'adds_next': new_adds
+        'adds_next': adds_change_text
     }
-    history_log.append(log_entry)
+    
+    state['historyLog'].append(history_entry)
 
-    is_unconscious = new_str <= 0
+    if state['berserkActive'] and new_str <= 0:
+        state['activePhase'] = 'summary'
+        save_state(state)
+        return jsonify({
+            'status': 'unconscious',
+            'message': '💀 Your Strength dropped to 0! You fall unconscious from exhaustion.',
+            'rest_turns_needed': state['maxStr'],
+            'warning_msg': warning_msg,
+            'state': state
+        })
+
+    state['activePhase'] = 'round_end' if state['berserkActive'] else 'damage'
+    save_state(state)
 
     return jsonify({
-        'status': 'unconscious' if is_unconscious else 'next_round_prompt',
-        'str_lost': str_lost,
-        'new_str': new_str,
-        'new_adds': new_adds,
-        'effective_dice': effective_dice,
+        'status': 'ok',
         'warning_msg': warning_msg,
-        'history_log': history_log,
-        'rest_turns_needed': max_str - new_str,
-        'message': "💥 YOU FELL UNCONSCIOUS!" if is_unconscious else f"📉 Lost {str_lost} STR. Base STR remaining: {new_str}/{max_str}. Updated Adds: {new_adds}."
+        'state': state
     })
 
+@app.route('/api/next_round', methods=['POST'])
+def next_round():
+    state = get_state()
+    data = request.json
+    stopped = data.get('stopped', False)
+
+    if stopped:
+        state['berserkActive'] = False
+        state['activePhase'] = 'summary'
+        rest_needed = state['maxStr'] - state['currentStr']
+        state['summaryMsg'] = f"✨ You snapped out of the berserk rage! You need {rest_needed} turn(s) of full rest to regain your Strength."
+    else:
+        state['roundNum'] += 1
+        state['insaneStrengthActive'] = False
+        state['spentSpiteThisRound'] = 0
+        state['damageResolvedThisRound'] = False
+        state['lastDamageMessage'] = ""
+        state['expectedDice'] = state['activeWeaponDice']
+        state['currentDiceSum'] = 0
+        state['currentSpiteTotal'] = 0
+        state['finalDamageThisRound'] = 0
+        state['pendingSets'] = []
+        state['currentSetInfo'] = None
+        state['rollHistory'] = []
+        state['activePhase'] = 'damage'
+
+    save_state(state)
+    return jsonify({'status': 'ok', 'state': state})
+
+@app.route('/api/reset_combat', methods=['POST'])
+def reset_combat():
+    session.pop('state', None)
+    return jsonify({'status': 'ok'})
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
