@@ -172,6 +172,13 @@
             box-shadow: 0 4px 12px rgba(155, 93, 229, 0.3);
         }
         button:hover { opacity: 0.85; filter: brightness(1.1); }
+        button:disabled, button.disabled {
+            background: #4a3b5c !important;
+            color: #8c7d9e !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            opacity: 0.6;
+        }
         button.alt { background: var(--accent-green); }
         button.gold { background: var(--accent-gold); color: #1a0b2e; }
         button.purple { background: var(--accent-unicorn); color: #fff; }
@@ -376,7 +383,7 @@
             {% if not state.currentSetInfo %}
             <div id="dice-adjust-box" class="inline-dice-ctrl">
                 <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool:</label>
-                <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1" oninput="updateAutoRollButtonText()" onchange="saveDicePool()">
+                <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1" oninput="updateAutoRollButtonText(); validateDiceInputUI();" onchange="saveDicePool()">
                 <span style="font-size:0.8em; color:#d8b4fe;">(Adjust anytime)</span>
             </div>
             {% endif %}
@@ -427,7 +434,7 @@
             </div>
 
             {% if not state.damageResolvedThisRound %}
-            <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4" oninput="validateDiceInputUI(this)">
+            <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4" oninput="validateDiceInputUI()">
             <div>
                 <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
                 <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{ state.expectedDice }}d6</button>
@@ -686,20 +693,45 @@
         location.reload();
     }
 
-    function validateDiceInputUI(inputEl) {
+    function validateDiceInputUI() {
         const alertBox = document.getElementById('damage-alert');
-        const parts = inputEl.value.trim().replace(/,/g, ' ').split(/\s+/);
+        const submitBtn = document.getElementById('submit-damage-btn');
+        const diceInputEl = document.getElementById('dice-input');
+        const dicePoolEl = document.getElementById('current-dice-pool-input');
+
+        if (!diceInputEl || !submitBtn) return true;
+
+        const expectedCount = dicePoolEl ? parseInt(dicePoolEl.value, 10) || 1 : 1;
+        const rawVal = diceInputEl.value.trim();
+        const parts = rawVal === '' ? [] : rawVal.replace(/,/g, ' ').split(/\s+/);
+
+        // Check for individual value errors (greater than 6 or less than 1)
         for (let p of parts) {
             if (p !== '') {
                 const val = parseInt(p, 10);
                 if (isNaN(val) || val > 6 || val < 1) {
                     alertBox.classList.remove('hidden');
                     alertBox.innerText = `⚠️ Invalid value "${p}": Individual dice values must be between 1 and 6 on a d6 system!`;
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('disabled');
                     return false;
                 }
             }
         }
+
+        // Check for count mismatch (not enough or too many entries)
+        if (parts.length !== expectedCount) {
+            alertBox.classList.remove('hidden');
+            alertBox.innerText = `⚠️ Expected exactly ${expectedCount} dice entries, but got ${parts.length}.`;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('disabled');
+            return false;
+        }
+
+        // All checks passed
         alertBox.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('disabled');
         return true;
     }
 
@@ -709,7 +741,7 @@
 
         const diceInputEl = document.getElementById('dice-input');
         if (!autoRoll && diceInputEl) {
-            if (!validateDiceInputUI(diceInputEl)) {
+            if (!validateDiceInputUI()) {
                 return;
             }
         }
@@ -802,6 +834,7 @@
     loadSetupDefaults();
     updateAutoRollButtonText();
     initSparkles();
+    validateDiceInputUI();
 </script>
 </body>
 </html>
