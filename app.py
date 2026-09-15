@@ -93,7 +93,7 @@ def roll_damage():
     if len(all_pending_sets) > 0:
         next_set = all_pending_sets.pop(0)
         action_instruction = (
-            f" Pick up the {next_set['count']} dice that rolled [{next_set['value']}]. "
+            f" Pick up ONLY the {next_set['count']} dice that rolled [{next_set['value']}]. "
             f"Roll those exact {next_set['count']} dice for your {next_set['description']} and enter their new values below."
         )
         
@@ -135,14 +135,13 @@ def activate_berserk():
     if not roll_history:
         return jsonify({'status': 'no_sets', 'pending_sets': []})
     
-    # Analyze all dice rolled in the base weapon roll of this round for sets
     base_roll = roll_history[0]['dice']
     exploding_sets = analyze_roll(base_roll)
     
     if len(exploding_sets) > 0:
         next_set = exploding_sets.pop(0)
         action_instruction = (
-            f" Pick up the {next_set['count']} dice that rolled [{next_set['value']}]. "
+            f" Pick up ONLY the {next_set['count']} dice that rolled [{next_set['value']}]. "
             f"Roll those exact {next_set['count']} dice for your {next_set['description']} and enter their new values below."
         )
         return jsonify({

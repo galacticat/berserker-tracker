@@ -454,7 +454,9 @@
         const alertBox = document.getElementById('damage-alert');
         alertBox.style.display = 'none';
 
-        state.expectedDice = parseInt(document.getElementById('current-dice-pool-input').value) || state.expectedDice;
+        if (!state.currentSetInfo) {
+            state.expectedDice = parseInt(document.getElementById('current-dice-pool-input').value) || state.expectedDice;
+        }
 
         const payload = {
             auto_roll: autoRoll,
@@ -497,6 +499,7 @@
             state.currentSetInfo = data.current_set_info;
             state.expectedDice = data.expected_dice;
             
+            // Hide full dice pool adjuster during set explosion rerolls
             document.getElementById('dice-adjust-box').style.display = 'none';
 
             document.getElementById('damage-title').innerText = "🔥 BERSERK EXPLOSION DETECTED!";
