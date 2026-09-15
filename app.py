@@ -84,7 +84,7 @@ def roll_damage():
         'spite': phase_spite
     })
     
-    # ONLY evaluate set explosions if Berserk mode is active!
+    # Set explosions only occur if Berserk mode is active
     if berserk_active:
         new_exploding_sets = analyze_roll(dice)
         all_pending_sets = pending_sets + new_exploding_sets
@@ -144,11 +144,15 @@ def roll_str_loss():
     dice_sum = int(data.get('dice_sum', 0))
     spite_total = int(data.get('spite_total', 0))
     spent_spite = int(data.get('spent_spite', 0))
+    berserk_active = data.get('berserk_active', False)
     roll_history = data.get('roll_history', [])
     history_log = data.get('history_log', [])
     insane_strength_active = data.get('insane_strength_active', False)
 
-    if auto_roll:
+    # If not berserk, zero STR is lost
+    if not berserk_active:
+        str_lost = 0
+    elif auto_roll:
         str_lost = random.randint(1, 6)
     else:
         try:
@@ -198,7 +202,7 @@ def roll_str_loss():
         'warning_msg': warning_msg,
         'history_log': history_log,
         'rest_turns_needed': max_str - new_str,
-        'message': "💥 YOU FELL UNCONSCIOUS! Berserking ends immediately." if is_unconscious else f"📉 Lost {str_lost} STR. Base STR remaining: {new_str}/{max_str}. Updated Adds: {new_adds}."
+        'message': "💥 YOU FELL UNCONSCIOUS!" if is_unconscious else f"📉 Lost {str_lost} STR. Base STR remaining: {new_str}/{max_str}. Updated Adds: {new_adds}."
     })
 
 if __name__ == '__main__':

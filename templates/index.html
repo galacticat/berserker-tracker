@@ -272,7 +272,7 @@
     function getAvailableSpite() {
         let totalSpent = state.spentSpiteThisRound;
         if (state.insaneStrengthActive) {
-            totalSpent += 3; // Insane Strength costs 3 spite
+            totalSpent += 3;
         }
         return Math.max(0, state.currentSpiteTotal - totalSpent);
     }
@@ -280,14 +280,12 @@
     function updateFeatVisibility() {
         const availableSpite = getAvailableSpite();
         
-        // Update Spend 2 Spite to Berserk Box
         if (!state.berserkActive && state.spentSpiteThisRound === 0 && availableSpite >= 2) {
             document.getElementById('spend-spite-box').style.display = 'block';
         } else {
             document.getElementById('spend-spite-box').style.display = 'none';
         }
 
-        // Update Insane Strength Box
         if (state.hasInsaneStrengthFeat) {
             if (state.insaneStrengthActive || availableSpite >= 3) {
                 document.getElementById('insane-strength-box').style.display = 'block';
@@ -302,7 +300,6 @@
         state.berserkActive = true;
         alert("🔥 Spent 2 Spite to activate Berserk mode! Berserk will remain active until you calm down or drop unconscious.");
         
-        // Dynamic re-evaluation of Spite balance
         if (getAvailableSpite() < 3 && state.insaneStrengthActive) {
             state.insaneStrengthActive = false;
         }
@@ -435,13 +432,18 @@
             document.getElementById('dice-input').value = "";
         } else if (data.status === 'damage_done') {
             state.finalDamageThisRound = data.final_total;
-            
-            document.getElementById('persistent-damage-summary').innerHTML = `
-                <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${data.message}
-            `;
 
-            document.getElementById('damage-panel').style.display = 'none';
-            document.getElementById('str-panel').style.display = 'block';
+            // IF NOT BERSERK: Skip STR Loss & IQ Save entirely! Automatically log and advance round.
+            if (!state.berserkActive) {
+                await submitStrLoss(false); // Automatically submit 0 STR loss
+                nextRound(false);           // Automatically advance to next round
+            } else {
+                document.getElementById('persistent-damage-summary').innerHTML = `
+                    <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${data.message}
+                `;
+                document.getElementById('damage-panel').style.display = 'none';
+                document.getElementById('str-panel').style.display = 'block';
+            }
         }
     }
 
@@ -460,6 +462,7 @@
             dice_sum: state.currentDiceSum,
             spite_total: state.currentSpiteTotal,
             spent_spite: state.spentSpiteThisRound,
+            berserk_active: state.berserkActive,
             roll_history: state.rollHistory,
             history_log: state.historyLog,
             insane_strength_active: state.insaneStrengthActive
@@ -490,11 +493,13 @@
         document.getElementById('str-panel').style.display = 'none';
         updateDisplay();
 
-        if (data.status === 'unconscious') {
-            state.berserkActive = false;
-            showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
-        } else {
-            document.getElementById('round-end-panel').style.display = 'block';
+        if (state.berserkActive) {
+            if (data.status === 'unconscious') {
+                state.berserkActive = false;
+                showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
+            } else {
+                document.getElementById('round-end-panel').style.display = 'block';
+            }
         }
     }
 
