@@ -100,32 +100,35 @@
             padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
         }
         
-        /* Optimized Stat Banner for Mobile */
+        /* Perfectly Balanced Stat Banner for Web and Mobile */
         .stat-banner {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch;
             gap: 10px;
-            background: #1f0d38; padding: 12px; border-radius: 8px; margin-bottom: 15px;
+            background: #1f0d38; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 15px;
             border: 1px solid rgba(155, 93, 229, 0.3);
         }
-        .stat-item { text-align: center; background: rgba(28, 12, 51, 0.6); padding: 8px; border-radius: 6px; }
-        .stat-item.full-width {
-            grid-column: span 2;
-        }
-        @media (min-width: 600px) {
-            .stat-banner {
-                display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center;
-            }
-            .stat-item.full-width {
-                grid-column: auto;
-                flex: 1;
-            }
+        .stat-item { 
+            text-align: center; 
+            flex: 1 1 110px; 
+            min-width: 100px;
+            background: rgba(28, 12, 51, 0.6); 
+            padding: 8px; 
+            border-radius: 6px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-        .stat-val { font-size: 1.3em; font-weight: bold; color: var(--accent-gold); }
+        .stat-val { font-size: 1.3em; font-weight: bold; color: var(--accent-gold); margin: 4px 0; }
         @media (min-width: 768px) { .stat-val { font-size: 1.6em; } }
-        .buff-controls { display: flex; gap: 4px; margin-top: 6px; justify-content: center; }
-        .buff-btn { padding: 4px 8px; font-size: 0.75em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
+        .buff-controls { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
+        .buff-btn { padding: 3px 6px; font-size: 0.7em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
         .buff-btn:hover { background: #6b3ca6; }
         .section {
             background: #200e3a; padding: 14px; border-radius: 8px; margin-bottom: 15px;
@@ -251,6 +254,7 @@
             <div class="stat-item">
                 <div>Round</div>
                 <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
+                <div style="visibility: hidden; font-size: 0.7em;" class="buff-controls">spacer</div>
             </div>
             <!-- STR BANNER ITEM -->
             <div class="stat-item">
@@ -270,7 +274,7 @@
                 </div>
             </div>
             <!-- ADDS BANNER ITEM -->
-            <div class="stat-item full-width">
+            <div class="stat-item">
                 <div>Active Adds</div>
                 <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
                 <div class="buff-controls">
