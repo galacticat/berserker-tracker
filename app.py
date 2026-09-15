@@ -1,7 +1,9 @@
 import os
 import random
+import csv
+import io
 from collections import Counter
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, Response
 
 app = Flask(__name__)
 
@@ -360,13 +362,11 @@ def roll_str_loss():
 
     if state['berserkActive'] and new_str <= 0:
         state['activePhase'] = 'summary'
-        rest_needed = state['maxStr']
-        state['summaryMsg'] = f"💀 Your Strength reached 0! You have fallen unconscious from exhaustion. You need {rest_needed} turn(s) of full rest to recover."
+        state['summaryMsg'] = f"💀 Your Strength reached 0! You have fallen unconscious from exhaustion."
         save_state(state)
         return jsonify({
             'status': 'unconscious',
             'message': state['summaryMsg'],
-            'rest_turns_needed': rest_needed,
             'warning_msg': warning_msg,
             'state': state
         })
@@ -389,8 +389,7 @@ def next_round():
     if stopped:
         state['berserkActive'] = False
         state['activePhase'] = 'summary'
-        rest_needed = state['maxStr'] - state['currentStr']
-        state['summaryMsg'] = f"✨ You snapped out of the berserk rage! You need {rest_needed} turn(s) of full rest to regain your Strength."
+        state['summaryMsg'] = f"✨ You snapped out of the berserk rage!"
     else:
         state['roundNum'] += 1
         state['insaneStrengthActive'] = False
@@ -408,6 +407,46 @@ def next_round():
 
     save_state(state)
     return jsonify({'status': 'ok', 'state': state})
+
+@app.route('/api/export_csv', methods=['GET'])
+def export_csv():
+    state = get_state()
+    history = state.get('historyLog', [])
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow([
+        'Round', 
+        'Dice Breakdown', 
+        'Dice Total', 
+        'Spite (1s)', 
+        'Adds', 
+        'Total Damage Dealt', 
+        'STR Lost', 
+        'STR Left', 
+        'Adds Next Round'
+    ])
+
+    for row in history:
+        writer.writerow([
+            row.get('round'),
+            row.get('dice_breakdown'),
+            row.get('dice_sum'),
+            row.get('spite'),
+            row.get('adds'),
+            row.get('total_damage'),
+            row.get('str_lost'),
+            row.get('str_remaining'),
+            row.get('adds_next')
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=berserker_combat_log.csv"}
+    )
 
 @app.route('/api/reset_combat', methods=['POST'])
 def reset_combat():

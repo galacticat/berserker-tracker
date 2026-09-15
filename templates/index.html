@@ -128,7 +128,6 @@
             grid-column: span 1;
         }
 
-        /* Desktop View (768px+): All 3 items share a single row evenly */
         @media (min-width: 768px) {
             .stat-banner {
                 grid-template-columns: repeat(3, 1fr);
@@ -177,7 +176,8 @@
         button.gold { background: var(--accent-gold); color: #1a0b2e; }
         button.purple { background: var(--accent-unicorn); color: #fff; }
         button.active-feat { background: #2a9d8f !important; color: #fff; }
-        button.reset { background: #4a2875; color: #fff; margin-left: 10px; }
+        button.export { background: var(--accent-green); color: #fff; margin-right: 5px; }
+        button.reset { background: #4a2875; color: #fff; margin-left: 0; }
         .instruction-card {
             background: #2b124a; border: 2px solid var(--accent-unicorn); color: #ffd1dc;
             padding: 12px; border-radius: 6px; margin: 10px 0; line-height: 1.4; font-size: 0.95em;
@@ -215,6 +215,43 @@
             .header-row { flex-direction: row; justify-content: space-between; align-items: center; }
         }
         .hidden { display: none !important; }
+
+        /* Custom Modal Dialog Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 5, 30, 0.8);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1; pointer-events: auto;
+        }
+        .modal-box {
+            background: #281347;
+            border: 2px solid var(--accent-unicorn);
+            padding: 20px; border-radius: 10px;
+            width: 90%; max-width: 400px;
+            box-shadow: 0 10px 30px rgba(241, 91, 181, 0.4);
+            text-align: center;
+        }
+        .modal-title {
+            color: var(--accent-unicorn);
+            font-size: 1.2rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .modal-message {
+            color: var(--text-color);
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .modal-buttons {
+            display: flex; justify-content: center; gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -223,6 +260,18 @@
 <div class="sparkle-toggle-wrapper">
     <input type="checkbox" id="sparkles-toggle" checked onchange="toggleSparkles()">
     <label for="sparkles-toggle" style="margin-top:0; cursor:pointer; color:var(--text-color);">✨ Sparkles</label>
+</div>
+
+<!-- Custom Modal Dialog Markup -->
+<div id="custom-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 id="modal-title" class="modal-title">🦄 Notice</h3>
+        <p id="modal-message" class="modal-message">Message goes here...</p>
+        <div id="modal-buttons" class="modal-buttons">
+            <button type="button" id="modal-ok-btn" onclick="closeModal(true)">OK</button>
+            <button type="button" id="modal-cancel-btn" class="alt hidden" onclick="closeModal(false)">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <div class="container">
@@ -427,7 +476,10 @@
         <!-- LOG TABLE -->
         <div class="header-row">
             <h3>📜 Combat Log & Adds Tracking</h3>
-            <button type="button" class="reset" onclick="clearCombatStorage()">🗑️ Reset Encounter Log</button>
+            <div>
+                <button type="button" class="export" onclick="exportCSV()">📥 Export CSV</button>
+                <button type="button" class="reset" onclick="confirmReset()">🗑️ Reset Encounter Log</button>
+            </div>
         </div>
         <div class="table-responsive">
             <table>
@@ -466,6 +518,40 @@
 
 <script>
     const SETUP_DEFAULTS_KEY = 'mm_berserker_setup_defaults';
+
+    // Custom Modal Dialog Handler
+    let modalCallback = null;
+
+    function showModal(title, message, isConfirm = false, callback = null) {
+        const modal = document.getElementById('custom-modal');
+        const titleEl = document.getElementById('modal-title');
+        const msgEl = document.getElementById('modal-message');
+        const okBtn = document.getElementById('modal-ok-btn');
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+
+        titleEl.innerText = title;
+        msgEl.innerText = message;
+        modalCallback = callback;
+
+        if (isConfirm) {
+            cancelBtn.classList.remove('hidden');
+            okBtn.innerText = 'Confirm';
+        } else {
+            cancelBtn.classList.add('hidden');
+            okBtn.innerText = 'OK';
+        }
+
+        modal.classList.add('show');
+    }
+
+    function closeModal(result) {
+        const modal = document.getElementById('custom-modal');
+        modal.classList.remove('show');
+        if (modalCallback) {
+            modalCallback(result);
+            modalCallback = null;
+        }
+    }
 
     function initSparkles() {
         const storedPref = sessionStorage.getItem('mm_sparkles_enabled');
@@ -584,9 +670,12 @@
         });
         const data = await res.json();
         if (data.warning_msg) {
-            alert(data.warning_msg);
+            showModal('🦄 Strength Warning', data.warning_msg, false, () => {
+                location.reload();
+            });
+        } else {
+            location.reload();
         }
-        location.reload();
     }
 
     async function adjustAdds(delta) {
@@ -654,11 +743,14 @@
 
         const data = await res.json();
         if (!res.ok) {
-            alert(data.message);
+            showModal('🦄 Error', data.message);
             return;
         }
         if (data.warning_msg) {
-            alert(data.warning_msg);
+            showModal('🦄 Strength Warning', data.warning_msg, false, () => {
+                location.reload();
+            });
+            return;
         }
         location.reload();
     }
@@ -672,11 +764,17 @@
         location.reload();
     }
 
-    async function clearCombatStorage() {
-        if (confirm("Clear combat log and start a fresh encounter?")) {
-            await fetch('/api/reset_combat', { method: 'POST' });
-            location.reload();
-        }
+    function exportCSV() {
+        window.location.href = '/api/export_csv';
+    }
+
+    function confirmReset() {
+        showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, async (confirmed) => {
+            if (confirmed) {
+                await fetch('/api/reset_combat', { method: 'POST' });
+                location.reload();
+            }
+        });
     }
 
     loadSetupDefaults();
