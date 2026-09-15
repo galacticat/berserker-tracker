@@ -90,10 +90,10 @@
             color: #a8ebd9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 1.05em;
         }
         .spite-box {
-            margin-bottom: 12px; background: rgba(230, 57, 70, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-red);
+            margin-bottom: 12px; background: rgba(230, 57, 70, 0.2); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-red); border-left: 4px solid var(--accent-red);
         }
         .insane-box {
-            margin-bottom: 12px; background: rgba(114, 9, 183, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-purple);
+            margin-bottom: 12px; background: rgba(114, 9, 183, 0.2); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-purple); border-left: 4px solid var(--accent-purple);
         }
         .table-responsive {
             width: 100%;
@@ -228,22 +228,30 @@
             {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
             {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
             <div id="spend-spite-box" class="spite-box {% if state.berserkActive or state.spentSpiteThisRound > 0 or available_spite < 2 %}hidden{% endif %}">
-                <strong style="color: var(--accent-gold);">🔥 SPITE ACTIVATION AVAILABLE!</strong>
-                <div style="margin: 5px 0 8px 0; font-size: 0.9em;">You rolled 2+ Spite. Spend 2 Spite to enter Berserk mode for this entire combat!</div>
-                <button type="button" class="gold" onclick="spendSpiteForBerserk()">Spend 2 Spite to Activate Berserk</button>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong style="color: var(--accent-gold);">🔥 BERSERK ACTIVATION AVAILABLE!</strong>
+                        <div style="margin-top: 4px; font-size: 0.9em; color: #f1faee;">You have 2+ available Spite. Spend 2 Spite to enter Berserk mode for this entire combat.</div>
+                    </div>
+                    <button type="button" class="gold" onclick="spendSpiteForBerserk()" style="margin-top: 0;">Activate Berserk (2 spite)</button>
+                </div>
             </div>
 
             <!-- INSANE STRENGTH OPTION -->
             <div id="insane-strength-box" class="insane-box {% if not state.hasInsaneStrengthFeat or (not state.insaneStrengthActive and available_spite < 3) %}hidden{% endif %}">
-                <strong style="color: var(--accent-gold);">⚡ 3 AVAILABLE SPITE DETECTED!</strong>
-                <div style="margin: 5px 0 8px 0; font-size: 0.9em;">Your Insane Strength feat requirement is met! You may activate it to double your STR for this round.</div>
-                <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn" onclick="toggleInsaneStrength()">
-                    {% if state.insaneStrengthActive %}
-                        💪 Insane Strength ACTIVE! (STR Doubled)
-                    {% else %}
-                        💪 Activate Insane Strength (Double STR & Recalculate Adds)
-                    {% endif %}
-                </button>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong style="color: var(--accent-gold);">⚡ INSANE STRENGTH AVAILABLE!</strong>
+                        <div style="margin-top: 4px; font-size: 0.9em; color: #f1faee;">You have 3+ available Spite. Spend 3 Spite to double your STR for this round.</div>
+                    </div>
+                    <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn" onclick="toggleInsaneStrength()" style="margin-top: 0;">
+                        {% if state.insaneStrengthActive %}
+                            💪 Insane Strength ACTIVE (STR Doubled)
+                        {% else %}
+                            Activate Insane Strength (3 spite)
+                        {% endif %}
+                    </button>
+                </div>
             </div>
 
             {% if not state.berserkActive and state.damageResolvedThisRound %}
