@@ -100,7 +100,7 @@
             padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
         }
         
-        /* Perfectly Balanced Stat Banner for Web and Mobile */
+        /* Stat Banner: Round on top row for mobile, 3-up on desktop */
         .stat-banner {
             display: flex;
             flex-wrap: wrap;
@@ -115,14 +115,30 @@
         }
         .stat-item { 
             text-align: center; 
-            flex: 1 1 110px; 
-            min-width: 100px;
             background: rgba(28, 12, 51, 0.6); 
             padding: 8px; 
             border-radius: 6px; 
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+        }
+        /* Mobile layout: Round is full width (1st row), STR & Adds share 2nd row */
+        .stat-item.round-item {
+            flex: 0 0 100%;
+        }
+        .stat-item.stat-subitem {
+            flex: 1 1 45%;
+            min-width: 130px;
+        }
+
+        /* Desktop layout (768px+): All 3 sit side-by-side */
+        @media (min-width: 768px) {
+            .stat-item.round-item {
+                flex: 1 1 auto;
+            }
+            .stat-item.stat-subitem {
+                flex: 1 1 auto;
+            }
         }
 
         .stat-val { font-size: 1.3em; font-weight: bold; color: var(--accent-gold); margin: 4px 0; }
@@ -251,13 +267,13 @@
     <!-- MAIN DASHBOARD -->
     <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
         <div class="stat-banner">
-            <div class="stat-item">
+            <!-- ROUND (Row 1 on mobile, 1st item on desktop) -->
+            <div class="stat-item round-item">
                 <div>Round</div>
                 <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
-                <div style="visibility: hidden; font-size: 0.7em;" class="buff-controls">spacer</div>
             </div>
-            <!-- STR BANNER ITEM -->
-            <div class="stat-item">
+            <!-- STR BANNER ITEM (Row 2 on mobile, 2nd item on desktop) -->
+            <div class="stat-item stat-subitem">
                 <div>Strength (STR)</div>
                 <div class="stat-val" id="disp-str">
                     {% if state.insaneStrengthActive %}
@@ -273,8 +289,8 @@
                     <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
                 </div>
             </div>
-            <!-- ADDS BANNER ITEM -->
-            <div class="stat-item">
+            <!-- ADDS BANNER ITEM (Row 2 on mobile, 3rd item on desktop) -->
+            <div class="stat-item stat-subitem">
                 <div>Active Adds</div>
                 <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
                 <div class="buff-controls">
