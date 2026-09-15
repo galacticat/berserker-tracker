@@ -754,28 +754,22 @@
 
         if (!diceInputEl || !submitBtn) return true;
 
+        // Auto-format: keep only valid d6 digits (1-6) and insert spaces between each number
+        const rawVal = diceInputEl.value;
+        const digits = rawVal.replace(/[^1-6]/g, '');
+        const formatted = digits.split('').join(' ');
+        if (rawVal !== formatted) {
+            diceInputEl.value = formatted;
+        }
+
         const expectedCount = dicePoolEl ? parseInt(dicePoolEl.value, 10) || 1 : 1;
-        const rawVal = diceInputEl.value.trim();
-        const parts = rawVal === '' ? [] : rawVal.replace(/,/g, ' ').split(/\s+/);
+        const parts = formatted === '' ? [] : formatted.split(/\s+/);
 
         if (parts.length === 0) {
             alertBox.classList.add('hidden');
             submitBtn.disabled = true;
             submitBtn.classList.add('disabled');
             return false;
-        }
-
-        for (let p of parts) {
-            if (p !== '') {
-                const val = parseInt(p, 10);
-                if (isNaN(val) || val > 6 || val < 1) {
-                    alertBox.classList.remove('hidden');
-                    alertBox.innerText = `⚠️ Invalid value "${p}": Individual dice values must be between 1 and 6 on a d6 system!`;
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('disabled');
-                    return false;
-                }
-            }
         }
 
         if (parts.length !== expectedCount) {
