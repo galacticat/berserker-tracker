@@ -2,17 +2,12 @@ import os
 import random
 from collections import Counter
 from flask import Flask, render_template, request, jsonify, session
-from flask_session import Session
 
 app = Flask(__name__)
 
-# Session Configuration
+# Standard Secure Cookie Session Configuration (No filesystem folder required)
 app.config['SECRET_KEY'] = 'berserker_secret_key_fixed_98765'
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = True
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-Session(app)
+app.config['SESSION_COOKIE_NAME'] = 'berserker_session'
 
 @app.after_request
 def add_header(response):
