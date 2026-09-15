@@ -253,8 +253,29 @@
         .modal-message {
             color: var(--text-color);
             font-size: 0.95em;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             line-height: 1.4;
+        }
+        .modal-dice-group {
+            background: #18092c;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #4a2875;
+            text-align: left;
+        }
+        .modal-dice-group label {
+            margin-top: 0;
+            font-size: 0.85em;
+            color: var(--accent-gold);
+        }
+        .modal-dice-group input {
+            width: calc(100% - 22px);
+            margin-bottom: 0;
+            margin-top: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent-gold);
         }
         .modal-buttons {
             display: flex; justify-content: center; gap: 10px;
@@ -274,6 +295,12 @@
     <div class="modal-box">
         <h3 id="modal-title" class="modal-title">🦄 Notice</h3>
         <p id="modal-message" class="modal-message">Message goes here...</p>
+        
+        <div id="modal-dice-container" class="modal-dice-group hidden">
+            <label for="modal-dice-input">🎲 Update Dice Pool (Active Weapon Dice):</label>
+            <input type="number" id="modal-dice-input" min="1" value="{{ state.activeWeaponDice }}">
+        </div>
+
         <div id="modal-buttons" class="modal-buttons">
             <button type="button" id="modal-ok-btn" onclick="closeModal(true)">OK</button>
             <button type="button" id="modal-cancel-btn" class="alt hidden" onclick="closeModal(false)">Cancel</button>
@@ -528,16 +555,25 @@
 
     let modalCallback = null;
 
-    function showModal(title, message, isConfirm = false, callback = null) {
+    function showModal(title, message, isConfirm = false, showDiceInput = false, currentDice = 8, callback = null) {
         const modal = document.getElementById('custom-modal');
         const titleEl = document.getElementById('modal-title');
         const msgEl = document.getElementById('modal-message');
+        const diceContainer = document.getElementById('modal-dice-container');
+        const diceInput = document.getElementById('modal-dice-input');
         const okBtn = document.getElementById('modal-ok-btn');
         const cancelBtn = document.getElementById('modal-cancel-btn');
 
         titleEl.innerText = title;
         msgEl.innerText = message;
         modalCallback = callback;
+
+        if (showDiceInput) {
+            diceContainer.classList.remove('hidden');
+            diceInput.value = currentDice;
+        } else {
+            diceContainer.classList.add('hidden');
+        }
 
         if (isConfirm) {
             cancelBtn.classList.remove('hidden');
@@ -550,9 +586,23 @@
         modal.classList.add('show');
     }
 
-    function closeModal(result) {
+    async function closeModal(result) {
         const modal = document.getElementById('custom-modal');
         modal.classList.remove('show');
+
+        // Check if dice input was visible and confirmed
+        const diceContainer = document.getElementById('modal-dice-container');
+        if (!diceContainer.classList.contains('hidden') && result) {
+            const newDiceVal = parseInt(document.getElementById('modal-dice-input').value, 10);
+            if (!isNaN(newDiceVal) && newDiceVal >= 1) {
+                await fetch('/api/update_dice_pool', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ dice_pool: newDiceVal })
+                });
+            }
+        }
+
         if (modalCallback) {
             modalCallback(result);
             modalCallback = null;
@@ -676,7 +726,8 @@
         });
         const data = await res.json();
         if (data.warning_msg) {
-            showModal('🦄 Strength Warning', data.warning_msg, false, () => {
+            const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
+            showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                 location.reload();
             });
         } else {
@@ -705,7 +756,6 @@
         const rawVal = diceInputEl.value.trim();
         const parts = rawVal === '' ? [] : rawVal.replace(/,/g, ' ').split(/\s+/);
 
-        // If the box is completely empty, disable submit button but keep alert hidden
         if (parts.length === 0) {
             alertBox.classList.add('hidden');
             submitBtn.disabled = true;
@@ -713,7 +763,6 @@
             return false;
         }
 
-        // Check for individual value errors (greater than 6 or less than 1)
         for (let p of parts) {
             if (p !== '') {
                 const val = parseInt(p, 10);
@@ -727,7 +776,6 @@
             }
         }
 
-        // Check for count mismatch (not enough or too many entries)
         if (parts.length !== expectedCount) {
             alertBox.classList.remove('hidden');
             alertBox.innerText = `⚠️ Expected exactly ${expectedCount} dice entries, but got ${parts.length}.`;
@@ -736,7 +784,6 @@
             return false;
         }
 
-        // All checks passed
         alertBox.classList.add('hidden');
         submitBtn.disabled = false;
         submitBtn.classList.remove('disabled');
@@ -809,7 +856,8 @@
             return;
         }
         if (data.warning_msg) {
-            showModal('🦄 Strength Warning', data.warning_msg, false, () => {
+            const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
+            showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                 location.reload();
             });
             return;
@@ -831,7 +879,7 @@
     }
 
     function confirmReset() {
-        showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, async (confirmed) => {
+        showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, false, 8, async (confirmed) => {
             if (confirmed) {
                 await fetch('/api/reset_combat', { method: 'POST' });
                 location.reload();
