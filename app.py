@@ -5,7 +5,6 @@ from flask import Flask, render_template, request, jsonify, session
 
 app = Flask(__name__)
 
-# Standard Secure Cookie Session Configuration (No filesystem folder required)
 app.config['SECRET_KEY'] = 'berserker_secret_key_fixed_98765'
 app.config['SESSION_COOKIE_NAME'] = 'berserker_session'
 
