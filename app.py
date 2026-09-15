@@ -118,13 +118,24 @@ def adjust_str():
         new_str = max(0, state['currentStr'] + delta)
         state['currentStr'] = new_str
         
-        # Recalculate weapon dice requirement
         if new_str < state['minStrReq']:
             deficit = state['minStrReq'] - new_str
             state['activeWeaponDice'] = max(1, state['baseWeaponDice'] - deficit)
         else:
             state['activeWeaponDice'] = state['baseWeaponDice']
 
+        save_state(state)
+        return jsonify({'status': 'ok', 'state': state})
+    except ValueError:
+        return jsonify({'message': 'Invalid adjustment amount.'}), 400
+
+@app.route('/api/adjust_adds', methods=['POST'])
+def adjust_adds():
+    state = get_state()
+    data = request.json
+    try:
+        delta = int(data.get('delta', 0))
+        state['currentAdds'] = max(0, state['currentAdds'] + delta)
         save_state(state)
         return jsonify({'status': 'ok', 'state': state})
     except ValueError:

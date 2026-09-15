@@ -18,29 +18,36 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0; padding: 20px;
+            margin: 0; padding: 10px;
             display: flex; justify-content: center;
         }
         .container {
             width: 100%; max-width: 950px;
             background: var(--card-bg);
-            padding: 25px; border-radius: 12px;
+            padding: 15px; border-radius: 12px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
-        h1 { color: var(--accent-red); text-align: center; margin-top: 0; }
+        @media (min-width: 768px) {
+            body { padding: 20px; }
+            .container { padding: 25px; }
+        }
+        h1 { color: var(--accent-red); text-align: center; margin-top: 0; font-size: 1.5rem; }
+        @media (min-width: 768px) { h1 { font-size: 2rem; } }
         .rule-box {
             background: rgba(230, 57, 70, 0.15);
             border-left: 4px solid var(--accent-red);
             padding: 12px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em;
         }
         .stat-banner {
-            display: flex; justify-content: space-around; align-items: center;
+            display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center; gap: 10px;
             background: #2b2b36; padding: 15px; border-radius: 8px; margin-bottom: 20px;
         }
-        .stat-item { text-align: center; }
-        .stat-val { font-size: 1.6em; font-weight: bold; color: var(--accent-gold); }
-        .buff-controls { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
-        .buff-btn { padding: 3px 8px; font-size: 0.75em; border-radius: 4px; background: #444; }
+        .stat-item { text-align: center; flex: 1; min-width: 120px; }
+        .stat-val { font-size: 1.4em; font-weight: bold; color: var(--accent-gold); }
+        @media (min-width: 768px) { .stat-val { font-size: 1.6em; } }
+        .buff-controls { display: flex; gap: 4px; margin-top: 6px; justify-content: center; }
+        .buff-btn { padding: 4px 8px; font-size: 0.75em; border-radius: 4px; background: #444; color: #fff; cursor: pointer; border: none; }
+        .buff-btn:hover { background: #666; }
         .section {
             background: #252530; padding: 18px; border-radius: 8px; margin-bottom: 15px;
         }
@@ -75,7 +82,7 @@
             padding: 15px; border-radius: 6px; margin: 10px 0; line-height: 1.5; font-size: 1.05em;
         }
         .roll-breakdown {
-            background: #181820; border: 1px dashed #555; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace;
+            background: #181820; border: 1px dashed #555; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; word-break: break-all;
         }
         .alert { background: #3d1c1d; color: #ff8e8e; padding: 10px; border-radius: 6px; margin-top: 10px; }
         .summary-card {
@@ -88,11 +95,24 @@
         .insane-box {
             margin-bottom: 12px; background: rgba(114, 9, 183, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-purple);
         }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
-        th, td { border: 1px solid #333; padding: 10px; text-align: center; }
+        /* Mobile-Responsive Table Container */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 15px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; white-space: nowrap; }
+        @media (min-width: 768px) { table { font-size: 0.9em; white-space: normal; } }
+        th, td { border: 1px solid #333; padding: 8px 10px; text-align: center; }
         th { background: #1a1a20; color: var(--accent-gold); }
         .header-row {
-            display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+            display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 20px;
+        }
+        @media (min-width: 550px) {
+            .header-row { flex-direction: row; justify-content: space-between; align-items: center; }
         }
         .hidden { display: none !important; }
     </style>
@@ -146,6 +166,7 @@
                 <div>Round</div>
                 <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
             </div>
+            <!-- STR BANNER ITEM -->
             <div class="stat-item">
                 <div>Strength (STR)</div>
                 <div class="stat-val" id="disp-str">
@@ -155,7 +176,6 @@
                         {{ state.currentStr }} / {{ state.maxStr }}
                     {% endif %}
                 </div>
-                <!-- MANUAL STR BUFF ADJUSTMENTS -->
                 <div class="buff-controls">
                     <button type="button" class="buff-btn" onclick="adjustStr(5)" title="Buff +5 STR">+5</button>
                     <button type="button" class="buff-btn" onclick="adjustStr(1)" title="Buff +1 STR">+1</button>
@@ -163,9 +183,16 @@
                     <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
                 </div>
             </div>
+            <!-- ADDS BANNER ITEM -->
             <div class="stat-item">
                 <div>Active Adds</div>
                 <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
+                <div class="buff-controls">
+                    <button type="button" class="buff-btn" onclick="adjustAdds(5)" title="Buff +5 Adds">+5</button>
+                    <button type="button" class="buff-btn" onclick="adjustAdds(1)" title="Buff +1 Adds">+1</button>
+                    <button type="button" class="buff-btn" onclick="adjustAdds(-1)" title="Debuff -1 Adds">-1</button>
+                    <button type="button" class="buff-btn" onclick="adjustAdds(-5)" title="Debuff -5 Adds">-5</button>
+                </div>
             </div>
         </div>
 
@@ -285,36 +312,38 @@
             <h3>📜 Combat Log & Adds Tracking</h3>
             <button type="button" class="reset" onclick="clearCombatStorage()">🗑️ Reset Encounter Log</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Round</th>
-                    <th>Dice Breakdown</th>
-                    <th>Dice Total</th>
-                    <th>Spite (1s)</th>
-                    <th>Adds</th>
-                    <th>Total Damage Dealt</th>
-                    <th>STR Lost</th>
-                    <th>STR Left</th>
-                    <th>Adds Next Round</th>
-                </tr>
-            </thead>
-            <tbody id="history-table-body">
-                {% for row in state.historyLog|reverse %}
-                <tr>
-                    <td>{{ row.round }}</td>
-                    <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
-                    <td>{{ row.dice_sum }}</td>
-                    <td style="font-weight:bold; color:var(--accent-red);">{{ row.spite }}</td>
-                    <td>{{ row.adds }}</td>
-                    <td style="font-weight:bold; color:var(--accent-gold);">{{ row.total_damage }}</td>
-                    <td>-{{ row.str_lost }}</td>
-                    <td>{{ row.str_remaining }}</td>
-                    <td>{{ row.adds_next }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        <th>Dice Breakdown</th>
+                        <th>Dice Total</th>
+                        <th>Spite (1s)</th>
+                        <th>Adds</th>
+                        <th>Total Damage Dealt</th>
+                        <th>STR Lost</th>
+                        <th>STR Left</th>
+                        <th>Adds Next Round</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    {% for row in state.historyLog|reverse %}
+                    <tr>
+                        <td>{{ row.round }}</td>
+                        <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
+                        <td>{{ row.dice_sum }}</td>
+                        <td style="font-weight:bold; color:var(--accent-red);">{{ row.spite }}</td>
+                        <td>{{ row.adds }}</td>
+                        <td style="font-weight:bold; color:var(--accent-gold);">{{ row.total_damage }}</td>
+                        <td>-{{ row.str_lost }}</td>
+                        <td>{{ row.str_remaining }}</td>
+                        <td>{{ row.adds_next }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -369,6 +398,15 @@
 
     async function adjustStr(delta) {
         await fetch('/api/adjust_str', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ delta: delta })
+        });
+        location.reload();
+    }
+
+    async function adjustAdds(delta) {
+        await fetch('/api/adjust_adds', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ delta: delta })
