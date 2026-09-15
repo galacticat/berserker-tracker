@@ -276,26 +276,27 @@
         historyLog: []
     };
 
-    const STORAGE_KEY = 'berserker_combat_persistent_v2';
+    const STORAGE_KEY = 'mm_berserker_state';
 
     function saveStateToCache() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            console.error("Could not write to localStorage", e);
+        }
     }
 
     function loadStateFromCache() {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
+        if (!saved) return false;
         
         try {
             const loaded = JSON.parse(saved);
             if (loaded && loaded.inCombat) {
                 state = loaded;
 
-                const setupSec = document.getElementById('setup-section');
-                const combatSec = document.getElementById('combat-section');
-
-                if (setupSec) setupSec.style.display = 'none';
-                if (combatSec) combatSec.style.display = 'block';
+                document.getElementById('setup-section').style.display = 'none';
+                document.getElementById('combat-section').style.display = 'block';
 
                 updateDisplay();
                 renderHistory();
@@ -318,10 +319,12 @@
                     document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
                     updateFeatVisibility();
                 }
+                return true;
             }
         } catch (e) {
             console.error("Failed to load persistence state", e);
         }
+        return false;
     }
 
     function clearCombatStorage() {
@@ -708,8 +711,13 @@
         saveStateToCache();
     }
 
-    // Run immediately when script is evaluated
+    // Try loading immediately
     loadStateFromCache();
+
+    // Fallback load once DOM elements render fully
+    window.addEventListener('load', function() {
+        loadStateFromCache();
+    });
 </script>
 </body>
 </html>
