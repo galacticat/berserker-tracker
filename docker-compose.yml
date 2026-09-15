@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   berserker-tracker:
+    build: .
     image: berserker-tracker:latest
     container_name: berserker-app
     restart: unless-stopped
