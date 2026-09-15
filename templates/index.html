@@ -78,7 +78,7 @@
 <div class="container">
     <h1>🪓 Berserker Combat Dashboard</h1>
     <div class="rule-box">
-        <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. 1s deal Spite Damage directly! You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR.
+        <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. 1s deal Spite Damage directly! Pay 2 Spite once to enter Berserk. You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR.
     </div>
 
     <!-- SETUP FORM -->
@@ -97,7 +97,15 @@
         <input type="number" id="initial-adds" value="55" min="0">
 
         <div class="checkbox-container">
-            <input type="checkbox" id="has-insane-strength">
+            <input type="checkbox" id="already-berserk" checked>
+            <div>
+                <strong>Already Berserking at Start of Encounter?</strong>
+                <div style="font-size:0.85em; color:#aaa;">Uncheck if you need to pay 2 Spite on your first roll to enter Berserk mode.</div>
+            </div>
+        </div>
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="has-insane-strength" checked>
             <div>
                 <strong>Character Feat: 3/ Insane Strength</strong>
                 <div style="font-size:0.85em; color:#aaa;">Triggered on 3 Available Spite: "Your STR doubles for the current combat round! Refigure your combat adds."</div>
@@ -136,7 +144,7 @@
             <!-- SPEND SPITE TO ENTER BERSERK -->
             <div id="spend-spite-box" style="display:none; margin-bottom: 12px; background: rgba(230, 57, 70, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-red);">
                 <strong style="color: var(--accent-gold);">🔥 SPITE ACTIVATION AVAILABLE!</strong>
-                <div style="margin: 5px 0 8px 0; font-size: 0.9em;">You rolled 2+ Spite. You may spend 2 Spite to activate your Berserk state for this encounter!</div>
+                <div style="margin: 5px 0 8px 0; font-size: 0.9em;">You rolled 2+ Spite. Spend 2 Spite to enter Berserk mode for this entire combat!</div>
                 <button class="gold" id="spend-spite-btn" onclick="spendSpiteForBerserk()">Spend 2 Spite to Activate Berserk</button>
             </div>
 
@@ -219,9 +227,10 @@
         activeWeaponDice: 8,
         minStrReq: 15,
         currentAdds: 55,
-        hasInsaneStrengthFeat: false,
+        berserkActive: true,
+        hasInsaneStrengthFeat: true,
         insaneStrengthActive: false,
-        spentSpite: 0,
+        spentSpiteThisRound: 0,
         roundNum: 1,
         expectedDice: 8,
         currentDiceSum: 0,
@@ -240,10 +249,11 @@
         state.activeWeaponDice = state.baseWeaponDice;
         state.minStrReq = parseInt(document.getElementById('min-str-req').value) || 15;
         state.currentAdds = parseInt(document.getElementById('initial-adds').value) || 0;
+        state.berserkActive = document.getElementById('already-berserk').checked;
         state.hasInsaneStrengthFeat = document.getElementById('has-insane-strength').checked;
         state.roundNum = 1;
         state.historyLog = [];
-        state.spentSpite = 0;
+        state.spentSpiteThisRound = 0;
         
         document.getElementById('setup-section').style.display = 'none';
         document.getElementById('combat-section').style.display = 'block';
@@ -253,12 +263,12 @@
     }
 
     function spendSpiteForBerserk() {
-        state.spentSpite += 2;
+        state.spentSpiteThisRound = 2;
+        state.berserkActive = true;
         document.getElementById('spend-spite-box').style.display = 'none';
-        alert("🔥 Spent 2 Spite to activate Berserk mode! (These 2 Spite are deducted from your feat threshold pool).");
+        alert("🔥 Spent 2 Spite to activate Berserk mode! Berserk will remain active until you calm down or drop unconscious.");
         
-        // Re-evaluate if Insane Strength is still available after spending 2 spite
-        const availableSpite = Math.max(0, state.currentSpiteTotal - state.spentSpite);
+        const availableSpite = Math.max(0, state.currentSpiteTotal - state.spentSpiteThisRound);
         if (availableSpite < 3) {
             document.getElementById('insane-strength-box').style.display = 'none';
             state.insaneStrengthActive = false;
@@ -281,6 +291,8 @@
 
     function resetRoundState() {
         state.insaneStrengthActive = false;
+        state.spentSpiteThisRound = 0;
+        
         document.getElementById('spend-spite-box').style.display = 'none';
         document.getElementById('insane-strength-box').style.display = 'none';
         
@@ -342,7 +354,8 @@
             expected_dice: state.expectedDice,
             current_dice_sum: state.currentDiceSum,
             current_spite_total: state.currentSpiteTotal,
-            spent_spite: state.spentSpite,
+            spent_spite: state.spentSpiteThisRound,
+            berserk_active: state.berserkActive,
             roll_history: state.rollHistory,
             current_adds: getEffectiveAdds(),
             pending_sets: state.pendingSets,
@@ -368,12 +381,10 @@
         state.rollHistory = data.roll_history;
         renderBreakdown();
 
-        // Option to spend 2 spite to enter Berserk mode
         if (data.can_spend_for_berserk) {
             document.getElementById('spend-spite-box').style.display = 'block';
         }
 
-        // Option to unlock Insane Strength IF player has feat and available spite >= 3
         if (state.hasInsaneStrengthFeat && data.spite_triggered && !state.insaneStrengthActive) {
             document.getElementById('insane-strength-box').style.display = 'block';
         } else if (!data.spite_triggered) {
@@ -417,7 +428,7 @@
             final_damage: state.finalDamageThisRound,
             dice_sum: state.currentDiceSum,
             spite_total: state.currentSpiteTotal,
-            spent_spite: state.spentSpite,
+            spent_spite: state.spentSpiteThisRound,
             roll_history: state.rollHistory,
             history_log: state.historyLog,
             insane_strength_active: state.insaneStrengthActive
@@ -449,6 +460,7 @@
         updateDisplay();
 
         if (data.status === 'unconscious') {
+            state.berserkActive = false;
             showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
         } else {
             document.getElementById('round-end-panel').style.display = 'block';
@@ -457,6 +469,7 @@
 
     function nextRound(stopped) {
         if (stopped) {
+            state.berserkActive = false;
             document.getElementById('round-end-panel').style.display = 'none';
             const restNeeded = state.maxStr - state.currentStr;
             showSummary(`✨ You snapped out of the berserk rage! You need ${restNeeded} turn(s) of full rest to regain your Strength.`);
