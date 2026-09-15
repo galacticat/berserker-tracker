@@ -211,6 +211,12 @@
                 </button>
             </div>
 
+            {% if not state.berserkActive and state.damageResolvedThisRound %}
+            <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;">
+                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round (Forfeit Spite Options)</button>
+            </div>
+            {% endif %}
+
             <div id="breakdown-box" class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
                 <strong>🎲 Current Round Rolls:</strong>
                 <div id="breakdown-text">
@@ -220,11 +226,14 @@
                 </div>
             </div>
 
+            {% if not state.damageResolvedThisRound %}
             <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4">
             <div>
                 <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
                 <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{ state.expectedDice }}d6</button>
             </div>
+            {% endif %}
+
             <div id="damage-alert" class="alert hidden"></div>
         </div>
 
@@ -342,6 +351,11 @@
             alertBox.innerText = data.message;
             return;
         }
+        location.reload();
+    }
+
+    async function proceedNonBerserkRound() {
+        await fetch('/api/proceed_non_berserk', { method: 'POST' });
         location.reload();
     }
 
