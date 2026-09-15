@@ -42,6 +42,7 @@ def roll_damage():
     current_dice_sum = int(data.get('current_dice_sum', 0))
     current_spite_total = int(data.get('current_spite_total', 0))
     spent_spite = int(data.get('spent_spite', 0))
+    berserk_active = data.get('berserk_active', False)
     roll_history = data.get('roll_history', [])
     current_adds = int(data.get('current_adds', 0))
     pending_sets = data.get('pending_sets', [])
@@ -64,10 +65,12 @@ def roll_damage():
     phase_spite = dice.count(1)
     new_spite_total = current_spite_total + phase_spite
     
-    # Calculate available spite after deducting spent spite (e.g., 2 spent for Berserk activation)
+    # Deduct spent spite from available pool
     available_spite_for_feats = max(0, new_spite_total - spent_spite)
     spite_triggered = available_spite_for_feats >= 3
-    can_spend_for_berserk = (available_spite_for_feats >= 2) and (spent_spite == 0)
+    
+    # STRICT CHECK: NEVER offer to spend spite if Berserk is already active OR spite was already spent
+    can_spend_for_berserk = (available_spite_for_feats >= 2) and (not berserk_active) and (spent_spite == 0)
     
     if current_set_info:
         phase_label = f"Roll-Over for {current_set_info['description']}"

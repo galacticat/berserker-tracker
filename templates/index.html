@@ -264,7 +264,7 @@
 
     function spendSpiteForBerserk() {
         state.spentSpiteThisRound = 2;
-        state.berserkActive = true;
+        state.berserkActive = true; // Lock Berserk to active permanently for this combat session
         document.getElementById('spend-spite-box').style.display = 'none';
         alert("🔥 Spent 2 Spite to activate Berserk mode! Berserk will remain active until you calm down or drop unconscious.");
         
@@ -381,8 +381,11 @@
         state.rollHistory = data.roll_history;
         renderBreakdown();
 
-        if (data.can_spend_for_berserk) {
+        // ONLY display the spend spite option if backend says it can be spent AND berserk is not active
+        if (data.can_spend_for_berserk && !state.berserkActive) {
             document.getElementById('spend-spite-box').style.display = 'block';
+        } else {
+            document.getElementById('spend-spite-box').style.display = 'none';
         }
 
         if (state.hasInsaneStrengthFeat && data.spite_triggered && !state.insaneStrengthActive) {
@@ -460,7 +463,7 @@
         updateDisplay();
 
         if (data.status === 'unconscious') {
-            state.berserkActive = false;
+            state.berserkActive = false; // Reset berserk state on unconsciousness
             showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
         } else {
             document.getElementById('round-end-panel').style.display = 'block';
@@ -469,7 +472,7 @@
 
     function nextRound(stopped) {
         if (stopped) {
-            state.berserkActive = false;
+            state.berserkActive = false; // Reset berserk state when player calms down
             document.getElementById('round-end-panel').style.display = 'none';
             const restNeeded = state.maxStr - state.currentStr;
             showSummary(`✨ You snapped out of the berserk rage! You need ${restNeeded} turn(s) of full rest to regain your Strength.`);
