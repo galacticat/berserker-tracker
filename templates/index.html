@@ -452,7 +452,10 @@
 
             {% if not state.berserkActive and state.damageResolvedThisRound %}
             <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;">
-                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round (Forfeit Spite Options)</button>
+                <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 10px;">
+                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
+                </div>
+                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Damage / Next Round</button>
             </div>
             {% endif %}
 
@@ -480,7 +483,7 @@
         <div id="str-panel" class="section {% if state.activePhase != 'str_loss' %}hidden{% endif %}">
             <h3>Step 2: Berserk Exhaustion (STR & Adds Reduction)</h3>
             
-            <div id="persistent-damage-summary" class="summary-card">
+            <div class="summary-card">
                 <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
             </div>
 

@@ -157,8 +157,13 @@ def update_dice_pool():
         return jsonify({'message': 'Invalid dice pool value.'}), 400
 
 def finalize_non_berserk_round(state):
-    breakdown_strs = [f"{h['phase']}: [{', '.join(map(str, h['dice']))}] (={h['sum']})" for h in state['rollHistory']]
     effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
+    final_total = state['currentDiceSum'] + effective_adds
+    state['finalDamageThisRound'] = final_total
+
+    breakdown_strs = [f"{h['phase']}: [{', '.join(map(str, h['dice']))}] (={h['sum']})" for h in state['rollHistory']]
+    if state['insaneStrengthActive']:
+        breakdown_strs.append(f"[⚡ Insane Strength Active (+{state['currentStr']} STR adds)]")
     
     history_entry = {
         'round': state['roundNum'],
@@ -245,11 +250,7 @@ def roll_damage():
     if state['berserkActive']:
         state['activePhase'] = 'str_loss'
     else:
-        has_spite_options = (state['currentSpiteTotal'] >= 2) or (state['hasInsaneStrengthFeat'] and state['currentSpiteTotal'] >= 3)
-        if has_spite_options:
-            state['activePhase'] = 'damage'
-        else:
-            finalize_non_berserk_round(state)
+        state['activePhase'] = 'damage'
 
     save_state(state)
     return jsonify({
@@ -301,6 +302,14 @@ def activate_berserk():
 def toggle_insane_strength():
     state = get_state()
     state['insaneStrengthActive'] = not state['insaneStrengthActive']
+    
+    if state['damageResolvedThisRound']:
+        effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
+        final_total = state['currentDiceSum'] + effective_adds
+        state['finalDamageThisRound'] = final_total
+        spite_msg = f" (Dealt {state['currentSpiteTotal']} direct Spite Damage!)" if state['currentSpiteTotal'] > 0 else ""
+        state['lastDamageMessage'] = f"Rolled a total dice sum of {state['currentDiceSum']} + {effective_adds} adds = {final_total} Total Damage!{spite_msg}"
+
     save_state(state)
     return jsonify({'status': 'ok', 'state': state})
 
