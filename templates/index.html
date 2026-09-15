@@ -68,6 +68,10 @@
             background: #181820; border: 1px dashed #555; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace;
         }
         .alert { background: #3d1c1d; color: #ff8e8e; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        .summary-card {
+            background: rgba(42, 157, 143, 0.15); border: 1px solid var(--accent-green);
+            color: #a8ebd9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 1.05em;
+        }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         th, td { border: 1px solid #333; padding: 10px; text-align: center; }
         th { background: #1a1a20; color: var(--accent-gold); }
@@ -171,6 +175,10 @@
         <!-- STR LOSS PHASE -->
         <div id="str-panel" class="section" style="display:none;">
             <h3>Step 2: Berserk Exhaustion (STR & Adds Reduction)</h3>
+            
+            <!-- Persistent Round Damage Result Display -->
+            <div id="persistent-damage-summary" class="summary-card"></div>
+
             <div class="instruction-card">
                 <strong>📋 WHAT TO DO NOW:</strong>
                 <div>Roll 1d6 to determine your STR reduction for this round. Your combat adds will decrease by this exact amount next round!</div>
@@ -264,7 +272,7 @@
 
     function spendSpiteForBerserk() {
         state.spentSpiteThisRound = 2;
-        state.berserkActive = true; // Lock Berserk to active permanently for this combat session
+        state.berserkActive = true;
         document.getElementById('spend-spite-box').style.display = 'none';
         alert("🔥 Spent 2 Spite to activate Berserk mode! Berserk will remain active until you calm down or drop unconscious.");
         
@@ -381,7 +389,6 @@
         state.rollHistory = data.roll_history;
         renderBreakdown();
 
-        // ONLY display the spend spite option if backend says it can be spent AND berserk is not active
         if (data.can_spend_for_berserk && !state.berserkActive) {
             document.getElementById('spend-spite-box').style.display = 'block';
         } else {
@@ -408,12 +415,15 @@
             document.getElementById('dice-input').value = "";
         } else if (data.status === 'damage_done') {
             state.finalDamageThisRound = data.final_total;
-            alertBox.style.display = 'block';
-            alertBox.innerText = data.message;
-            setTimeout(() => {
-                document.getElementById('damage-panel').style.display = 'none';
-                document.getElementById('str-panel').style.display = 'block';
-            }, 1200);
+            
+            // Populate persistent damage summary inside Step 2
+            document.getElementById('persistent-damage-summary').innerHTML = `
+                <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${data.message}
+            `;
+
+            // Transition immediately to STR Loss panel without hiding the message box
+            document.getElementById('damage-panel').style.display = 'none';
+            document.getElementById('str-panel').style.display = 'block';
         }
     }
 
@@ -463,7 +473,7 @@
         updateDisplay();
 
         if (data.status === 'unconscious') {
-            state.berserkActive = false; // Reset berserk state on unconsciousness
+            state.berserkActive = false;
             showSummary(`${data.message} You need ${data.rest_turns_needed} turn(s) of full rest to regain your Strength.`);
         } else {
             document.getElementById('round-end-panel').style.display = 'block';
@@ -472,7 +482,7 @@
 
     function nextRound(stopped) {
         if (stopped) {
-            state.berserkActive = false; // Reset berserk state when player calms down
+            state.berserkActive = false;
             document.getElementById('round-end-panel').style.display = 'none';
             const restNeeded = state.maxStr - state.currentStr;
             showSummary(`✨ You snapped out of the berserk rage! You need ${restNeeded} turn(s) of full rest to regain your Strength.`);
