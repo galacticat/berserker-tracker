@@ -120,7 +120,6 @@ def adjust_str():
                 warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
                 state['minStrWarningTriggered'] = True
         else:
-            # Reset warning trigger if STR rises back above minimum
             state['minStrWarningTriggered'] = False
 
         save_state(state)
@@ -361,11 +360,13 @@ def roll_str_loss():
 
     if state['berserkActive'] and new_str <= 0:
         state['activePhase'] = 'summary'
+        rest_needed = state['maxStr']
+        state['summaryMsg'] = f"💀 Your Strength reached 0! You have fallen unconscious from exhaustion. You need {rest_needed} turn(s) of full rest to recover."
         save_state(state)
         return jsonify({
             'status': 'unconscious',
-            'message': '💀 Your Strength dropped to 0! You fall unconscious from exhaustion.',
-            'rest_turns_needed': state['maxStr'],
+            'message': state['summaryMsg'],
+            'rest_turns_needed': rest_needed,
             'warning_msg': warning_msg,
             'state': state
         })

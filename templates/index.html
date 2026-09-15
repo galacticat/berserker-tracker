@@ -418,7 +418,9 @@
         <!-- SUMMARY PANEL -->
         <div id="summary-panel" class="section {% if state.activePhase != 'summary' %}hidden{% endif %}">
             <h3 style="color:var(--accent-gold);">Combat Finished</h3>
-            <p id="summary-msg">{{ state.summaryMsg if state.summaryMsg else '' }}</p>
+            <p id="summary-msg" class="instruction-card" style="font-size: 1.05em; background: rgba(74, 21, 53, 0.4); border-color: var(--accent-unicorn);">
+                {{ state.summaryMsg if state.summaryMsg else '' }}
+            </p>
             <button type="button" onclick="clearCombatStorage()">Start New Combat</button>
         </div>
 
