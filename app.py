@@ -115,14 +115,6 @@ def roll_damage():
     data = request.json
     auto_roll = data.get('auto_roll', False)
 
-    # If non-berserk player rolls again while damage was already rolled, forfeit unused spite & advance
-    if not state['berserkActive'] and state['damageResolvedThisRound']:
-        # Forfeit Spite choices and clear roll history for next round attempt
-        state['rollHistory'] = []
-        state['currentDiceSum'] = 0
-        state['currentSpiteTotal'] = 0
-        state['damageResolvedThisRound'] = False
-
     if not state['currentSetInfo']:
         state['expectedDice'] = int(data.get('expected_dice', state['expectedDice']))
 
@@ -178,7 +170,31 @@ def roll_damage():
     if state['berserkActive']:
         state['activePhase'] = 'str_loss'
     else:
-        # Non-berserk stays on damage panel to inspect spite options or click to continue
+        # NON-BERSERK: Record directly to historyLog and set up next round
+        breakdown_strs = [f"{h['phase']}: [{', '.join(map(str, h['dice']))}] (={h['sum']})" for h in state['rollHistory']]
+        history_entry = {
+            'round': state['roundNum'],
+            'dice_breakdown': " ➔ ".join(breakdown_strs),
+            'dice_sum': state['currentDiceSum'],
+            'spite': state['currentSpiteTotal'],
+            'adds': f"+{effective_adds}",
+            'total_damage': final_total,
+            'str_lost': 0,
+            'str_remaining': state['currentStr'],
+            'adds_next': f"+{state['currentAdds']}"
+        }
+        state['historyLog'].append(history_entry)
+
+        # Increment round for normal attack
+        state['roundNum'] += 1
+        state['insaneStrengthActive'] = False
+        state['spentSpiteThisRound'] = 0
+        state['damageResolvedThisRound'] = False
+        state['expectedDice'] = state['activeWeaponDice']
+        state['currentDiceSum'] = 0
+        state['currentSpiteTotal'] = 0
+        state['finalDamageThisRound'] = 0
+        state['rollHistory'] = []
         state['activePhase'] = 'damage'
 
     save_state(state)
@@ -192,6 +208,12 @@ def roll_damage():
 @app.route('/api/activate_berserk', methods=['POST'])
 def activate_berserk():
     state = get_state()
+    
+    # If activating Spite mid-round or retroactively, undo non-berserk auto-log for current round if present
+    if state['historyLog'] and state['historyLog'][-1]['round'] == state['roundNum'] - 1 and not state['berserkActive']:
+        last_entry = state['historyLog'].pop()
+        state['roundNum'] -= 1
+
     state['spentSpiteThisRound'] = 2
     state['berserkActive'] = True
     
@@ -215,9 +237,7 @@ def activate_berserk():
             'state': state
         })
 
-    if state['damageResolvedThisRound']:
-        state['activePhase'] = 'str_loss'
-    
+    state['activePhase'] = 'str_loss'
     save_state(state)
     return jsonify({'status': 'activated', 'state': state})
 
