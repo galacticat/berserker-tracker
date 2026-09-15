@@ -84,7 +84,6 @@ def roll_damage():
         'spite': phase_spite
     })
     
-    # Set explosions only occur if Berserk mode is active
     if berserk_active:
         new_exploding_sets = analyze_roll(dice)
         all_pending_sets = pending_sets + new_exploding_sets
@@ -149,7 +148,6 @@ def roll_str_loss():
     history_log = data.get('history_log', [])
     insane_strength_active = data.get('insane_strength_active', False)
 
-    # If not berserk, zero STR is lost
     if not berserk_active:
         str_lost = 0
     elif auto_roll:

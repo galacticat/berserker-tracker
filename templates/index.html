@@ -159,6 +159,10 @@
                 <button class="purple" id="insane-btn" onclick="toggleInsaneStrength()">💪 Activate Insane Strength (Double STR & Recalculate Adds)</button>
             </div>
 
+            <div id="non-berserk-proceed-box" style="display:none; margin-top: 15px;">
+                <button class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
+            </div>
+
             <div id="breakdown-box" class="roll-breakdown" style="display:none;">
                 <strong>🎲 Current Round Rolls:</strong>
                 <div id="breakdown-text"></div>
@@ -166,7 +170,7 @@
 
             <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4">
             <div>
-                <button onclick="submitDamage(false)">Submit Manual Roll</button>
+                <button onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
                 <button class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll Dice</button>
             </div>
             <div id="damage-alert" class="alert" style="display:none;"></div>
@@ -304,6 +308,7 @@
             state.insaneStrengthActive = false;
         }
         
+        document.getElementById('non-berserk-proceed-box').style.display = 'none';
         updateFeatVisibility();
         updateDisplay();
     }
@@ -329,7 +334,11 @@
         
         document.getElementById('spend-spite-box').style.display = 'none';
         document.getElementById('insane-strength-box').style.display = 'none';
+        document.getElementById('non-berserk-proceed-box').style.display = 'none';
         
+        document.getElementById('submit-damage-btn').style.display = 'inline-block';
+        document.getElementById('auto-roll-btn').style.display = 'inline-block';
+
         const btn = document.getElementById('insane-btn');
         btn.style.background = "var(--accent-purple)";
         btn.innerText = "💪 Activate Insane Strength (Double STR & Recalculate Adds)";
@@ -433,11 +442,21 @@
         } else if (data.status === 'damage_done') {
             state.finalDamageThisRound = data.final_total;
 
-            // IF NOT BERSERK: Skip STR Loss & IQ Save entirely! Automatically log and advance round.
-            if (!state.berserkActive) {
-                await submitStrLoss(false); // Automatically submit 0 STR loss
-                nextRound(false);           // Automatically advance to next round
+            const availableSpite = getAvailableSpite();
+            const hasFeatOptions = (!state.berserkActive && availableSpite >= 2) || (state.hasInsaneStrengthFeat && availableSpite >= 3);
+
+            if (!state.berserkActive && hasFeatOptions) {
+                // Stay on step 1 so player can choose to click Berserk or Insane Strength
+                alertBox.style.display = 'block';
+                alertBox.innerText = data.message;
+                document.getElementById('submit-damage-btn').style.display = 'none';
+                document.getElementById('auto-roll-btn').style.display = 'none';
+                document.getElementById('non-berserk-proceed-box').style.display = 'block';
+            } else if (!state.berserkActive) {
+                // No feats unlocked and not berserk: proceed directly to next round
+                await proceedNonBerserkRound();
             } else {
+                // Berserk active: proceed to STR Loss phase
                 document.getElementById('persistent-damage-summary').innerHTML = `
                     <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${data.message}
                 `;
@@ -445,6 +464,11 @@
                 document.getElementById('str-panel').style.display = 'block';
             }
         }
+    }
+
+    async function proceedNonBerserkRound() {
+        await submitStrLoss(false);
+        nextRound(false);
     }
 
     async function submitStrLoss(autoRoll) {
