@@ -11,6 +11,7 @@
             --accent-red: #e63946;
             --accent-gold: #ffb703;
             --accent-green: #2a9d8f;
+            --accent-purple: #7209b7;
             --text-color: #f1faee;
         }
         body {
@@ -42,6 +43,10 @@
             background: #252530; padding: 18px; border-radius: 8px; margin-bottom: 15px;
         }
         label { display: block; margin-top: 8px; font-weight: bold; }
+        .checkbox-container {
+            display: flex; align-items: center; gap: 10px; margin: 15px 0; background: #1a1a22; padding: 10px; border-radius: 6px;
+        }
+        .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
         input[type="text"], input[type="number"] {
             background: #121214; border: 1px solid #444; color: #fff;
             padding: 10px 12px; border-radius: 4px; width: calc(100% - 26px); margin-bottom: 10px; font-size: 1em;
@@ -54,6 +59,7 @@
         button:hover { opacity: 0.85; }
         button.alt { background: var(--accent-green); }
         button.gold { background: var(--accent-gold); color: #000; }
+        button.purple { background: var(--accent-purple); color: #fff; }
         .instruction-card {
             background: #382419; border: 2px solid var(--accent-gold); color: #ffe3a8;
             padding: 15px; border-radius: 6px; margin: 10px 0; line-height: 1.5; font-size: 1.05em;
@@ -90,6 +96,14 @@
         <label>Current Combat Adds (Bonus Damage):</label>
         <input type="number" id="initial-adds" value="55" min="0">
 
+        <div class="checkbox-container">
+            <input type="checkbox" id="has-insane-strength">
+            <div>
+                <strong>Character Feat: Insane Strength</strong>
+                <div style="font-size:0.85em; color:#aaa;">"Your STR doubles for the current combat round! Refigure your combat adds."</div>
+            </div>
+        </div>
+
         <button onclick="startCombat()">Begin Berserking Combat</button>
     </div>
 
@@ -117,6 +131,10 @@
             <div id="action-box" class="instruction-card">
                 <strong>📋 WHAT TO DO NOW:</strong>
                 <div id="action-text">Roll your weapon dice pool and enter the results separated by spaces.</div>
+            </div>
+
+            <div id="insane-strength-box" style="display:none; margin-bottom: 12px;">
+                <button class="purple" id="insane-btn" onclick="toggleInsaneStrength()">💪 Activate Insane Strength (Double STR & Recalculate Adds)</button>
             </div>
 
             <div id="breakdown-box" class="roll-breakdown" style="display:none;">
@@ -190,6 +208,8 @@
         activeWeaponDice: 8,
         minStrReq: 15,
         currentAdds: 55,
+        hasInsaneStrengthFeat: false,
+        insaneStrengthActive: false,
         roundNum: 1,
         expectedDice: 8,
         currentDiceSum: 0,
@@ -207,17 +227,41 @@
         state.activeWeaponDice = state.baseWeaponDice;
         state.minStrReq = parseInt(document.getElementById('min-str-req').value) || 15;
         state.currentAdds = parseInt(document.getElementById('initial-adds').value) || 0;
+        state.hasInsaneStrengthFeat = document.getElementById('has-insane-strength').checked;
         state.roundNum = 1;
         state.historyLog = [];
         
         document.getElementById('setup-section').style.display = 'none';
         document.getElementById('combat-section').style.display = 'block';
         
+        if (state.hasInsaneStrengthFeat) {
+            document.getElementById('insane-strength-box').style.display = 'block';
+        }
+
         resetRoundState();
         updateDisplay();
     }
 
+    function toggleInsaneStrength() {
+        state.insaneStrengthActive = !state.insaneStrengthActive;
+        const btn = document.getElementById('insane-btn');
+        if (state.insaneStrengthActive) {
+            btn.style.background = "#2a9d8f";
+            btn.innerText = "💪 Insane Strength ACTIVE! (STR Doubled for Round)";
+        } else {
+            btn.style.background = "var(--accent-purple)";
+            btn.innerText = "💪 Activate Insane Strength (Double STR & Recalculate Adds)";
+        }
+        updateDisplay();
+    }
+
     function resetRoundState() {
+        state.insaneStrengthActive = false;
+        if (state.hasInsaneStrengthFeat) {
+            const btn = document.getElementById('insane-btn');
+            btn.style.background = "var(--accent-purple)";
+            btn.innerText = "💪 Activate Insane Strength (Double STR & Recalculate Adds)";
+        }
         state.expectedDice = state.activeWeaponDice;
         state.currentDiceSum = 0;
         state.finalDamageThisRound = 0;
@@ -237,10 +281,21 @@
         document.getElementById('dice-input').value = "";
     }
 
+    function getEffectiveAdds() {
+        if (state.insaneStrengthActive) {
+            // Insane Strength doubles current STR for the round and adds the extra STR directly to Combat Adds
+            return state.currentAdds + state.currentStr;
+        }
+        return state.currentAdds;
+    }
+
     function updateDisplay() {
+        const effectiveStr = state.insaneStrengthActive ? state.currentStr * 2 : state.currentStr;
+        const effectiveAdds = getEffectiveAdds();
+        
         document.getElementById('disp-round').innerText = state.roundNum;
-        document.getElementById('disp-str').innerText = `${state.currentStr} / ${state.maxStr}`;
-        document.getElementById('disp-adds').innerText = `+${state.currentAdds}`;
+        document.getElementById('disp-str').innerText = state.insaneStrengthActive ? `${effectiveStr} (${state.currentStr}x2)` : `${effectiveStr} / ${state.maxStr}`;
+        document.getElementById('disp-adds').innerText = `+${effectiveAdds}`;
     }
 
     function renderBreakdown() {
@@ -261,7 +316,7 @@
             expected_dice: state.expectedDice,
             current_dice_sum: state.currentDiceSum,
             roll_history: state.rollHistory,
-            current_adds: state.currentAdds,
+            current_adds: getEffectiveAdds(),
             pending_sets: state.pendingSets,
             current_set_info: state.currentSetInfo
         };
@@ -321,7 +376,8 @@
             final_damage: state.finalDamageThisRound,
             dice_sum: state.currentDiceSum,
             roll_history: state.rollHistory,
-            history_log: state.historyLog
+            history_log: state.historyLog,
+            insane_strength_active: state.insaneStrengthActive
         };
 
         const res = await fetch('/api/roll_str_loss', {
