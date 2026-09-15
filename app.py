@@ -114,7 +114,15 @@ def roll_damage():
     state = get_state()
     data = request.json
     auto_roll = data.get('auto_roll', False)
-    
+
+    # If non-berserk player rolls again while damage was already rolled, forfeit unused spite & advance
+    if not state['berserkActive'] and state['damageResolvedThisRound']:
+        # Forfeit Spite choices and clear roll history for next round attempt
+        state['rollHistory'] = []
+        state['currentDiceSum'] = 0
+        state['currentSpiteTotal'] = 0
+        state['damageResolvedThisRound'] = False
+
     if not state['currentSetInfo']:
         state['expectedDice'] = int(data.get('expected_dice', state['expectedDice']))
 
@@ -170,6 +178,7 @@ def roll_damage():
     if state['berserkActive']:
         state['activePhase'] = 'str_loss'
     else:
+        # Non-berserk stays on damage panel to inspect spite options or click to continue
         state['activePhase'] = 'damage'
 
     save_state(state)
