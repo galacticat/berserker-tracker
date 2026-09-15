@@ -57,7 +57,7 @@ def roll_damage():
     if len(dice) != expected_dice:
         return jsonify({
             'status': 'error', 
-            'message': f'⚠️ Incorrect number of dice! You must enter exactly {expected_dice} dice values.'
+            'message': f'⚠️ Incorrect number of dice! You must enter exactly {expected_dice} dice values for this set.'
         }), 400
 
     dice_sum = sum(dice)
@@ -84,6 +84,7 @@ def roll_damage():
         'spite': phase_spite
     })
     
+    # Analyze ONLY this roll's dice for new set explosions if Berserk is active
     if berserk_active:
         new_exploding_sets = analyze_roll(dice)
         all_pending_sets = pending_sets + new_exploding_sets
@@ -93,8 +94,8 @@ def roll_damage():
     if len(all_pending_sets) > 0:
         next_set = all_pending_sets.pop(0)
         action_instruction = (
-            f" Pick up ONLY the {next_set['count']} dice that rolled [{next_set['value']}]. "
-            f"Roll those exact {next_set['count']} dice for your {next_set['description']} and enter their new values below."
+            f" Pick up ONLY the {next_set['count']} dice for {next_set['description']}. "
+            f"Roll those exact {next_set['count']} dice and enter their values below."
         )
         
         return jsonify({
@@ -141,8 +142,8 @@ def activate_berserk():
     if len(exploding_sets) > 0:
         next_set = exploding_sets.pop(0)
         action_instruction = (
-            f" Pick up ONLY the {next_set['count']} dice that rolled [{next_set['value']}]. "
-            f"Roll those exact {next_set['count']} dice for your {next_set['description']} and enter their new values below."
+            f" Pick up ONLY the {next_set['count']} dice for {next_set['description']}. "
+            f"Roll those exact {next_set['count']} dice and enter their values below."
         )
         return jsonify({
             'status': 'rollover',

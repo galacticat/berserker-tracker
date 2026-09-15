@@ -359,6 +359,7 @@
             `;
             document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
             document.getElementById('dice-input').value = "";
+            document.getElementById('dice-input').placeholder = `e.g. enter ${state.expectedDice} dice values`;
             return;
         }
 
@@ -424,6 +425,7 @@
         document.getElementById('action-text').innerHTML = `Roll your <strong>${state.expectedDice} weapon dice</strong> and enter the ${state.expectedDice} values separated by spaces.`;
         document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
         document.getElementById('dice-input').value = "";
+        document.getElementById('dice-input').placeholder = "e.g. 6 6 3 4 2 1 5 4";
     }
 
     function getEffectiveAdds() {
@@ -499,7 +501,6 @@
             state.currentSetInfo = data.current_set_info;
             state.expectedDice = data.expected_dice;
             
-            // Hide full dice pool adjuster during set explosion rerolls
             document.getElementById('dice-adjust-box').style.display = 'none';
 
             document.getElementById('damage-title').innerText = "🔥 BERSERK EXPLOSION DETECTED!";
@@ -509,6 +510,7 @@
             `;
             document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
             document.getElementById('dice-input').value = "";
+            document.getElementById('dice-input').placeholder = `e.g. enter ${state.expectedDice} dice values`;
         } else if (data.status === 'damage_done') {
             state.finalDamageThisRound = data.final_total;
             state.damageResolvedThisRound = true;
