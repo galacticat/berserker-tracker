@@ -450,14 +450,14 @@
                 </div>
             </div>
 
-            {% if not state.berserkActive and state.damageResolvedThisRound %}
-            <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;">
+            {% set has_spite_options = (state.currentSpiteTotal >= 2) or (state.hasInsaneStrengthFeat and state.currentSpiteTotal >= 3) %}
+            {% set show_proceed_banner = state.damageResolvedThisRound and (not has_spite_options or state.insaneStrengthActive) %}
+            <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px; {% if not show_proceed_banner %}display: none;{% endif %}">
                 <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 10px;">
-                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
+                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> <span id="damage-msg-span">{{ state.lastDamageMessage }}</span>
                 </div>
                 <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Damage / Next Round</button>
             </div>
-            {% endif %}
 
             <div id="breakdown-box" class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
                 <strong>🎲 Current Round Rolls:</strong>
@@ -836,8 +836,11 @@
     }
 
     async function toggleInsaneStrength() {
-        await fetch('/api/toggle_insane_strength', { method: 'POST' });
-        location.reload();
+        const res = await fetch('/api/toggle_insane_strength', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            location.reload();
+        }
     }
 
     async function submitStrLoss(autoRoll) {
