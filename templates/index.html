@@ -276,7 +276,7 @@
         historyLog: []
     };
 
-    const STORAGE_KEY = 'berserker_combat_state';
+    const STORAGE_KEY = 'berserker_combat_state_v1';
 
     function saveStateToCache() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -289,13 +289,18 @@
                 const loaded = JSON.parse(saved);
                 if (loaded && loaded.inCombat) {
                     state = loaded;
+                    
+                    // Force DOM display updates
                     document.getElementById('setup-section').style.display = 'none';
                     document.getElementById('combat-section').style.display = 'block';
+                    
                     updateDisplay();
                     renderHistory();
+
                     if (state.rollHistory && state.rollHistory.length > 0) {
                         renderBreakdown();
                     }
+
                     if (state.damageResolvedThisRound && state.berserkActive) {
                         document.getElementById('damage-panel').style.display = 'none';
                         document.getElementById('str-panel').style.display = 'block';
@@ -303,6 +308,11 @@
                             <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
                         `;
                     } else {
+                        document.getElementById('damage-panel').style.display = 'block';
+                        document.getElementById('str-panel').style.display = 'none';
+                        document.getElementById('current-dice-pool-input').value = state.expectedDice;
+                        document.getElementById('action-text').innerHTML = `Roll your <strong>${state.expectedDice} weapon dice</strong> and enter the ${state.expectedDice} values separated by spaces.`;
+                        document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
                         updateFeatVisibility();
                     }
                 }
@@ -696,7 +706,7 @@
         saveStateToCache();
     }
 
-    window.onload = loadStateFromCache;
+    document.addEventListener('DOMContentLoaded', loadStateFromCache);
 </script>
 </body>
 </html>
