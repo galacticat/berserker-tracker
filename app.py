@@ -66,7 +66,6 @@ def roll_damage():
     phase_spite = dice.count(1)
     new_spite_total = current_spite_total + phase_spite
     
-    # Calculate available spite pool deducting any spent spite (e.g. 2 for Berserk, 3 for Insane Strength)
     total_spent = spent_spite + (3 if insane_strength_active else 0)
     available_spite_for_feats = max(0, new_spite_total - total_spent)
     
@@ -85,9 +84,13 @@ def roll_damage():
         'spite': phase_spite
     })
     
-    new_exploding_sets = analyze_roll(dice)
-    all_pending_sets = pending_sets + new_exploding_sets
-    
+    # ONLY evaluate set explosions if Berserk mode is active!
+    if berserk_active:
+        new_exploding_sets = analyze_roll(dice)
+        all_pending_sets = pending_sets + new_exploding_sets
+    else:
+        all_pending_sets = []
+
     if len(all_pending_sets) > 0:
         next_set = all_pending_sets.pop(0)
         action_instruction = (
@@ -169,7 +172,7 @@ def roll_str_loss():
     if spent_spite > 0:
         rolls_summary += f" [🔥 Activated Berserk (2 Spite)]"
     if insane_strength_active:
-        rolls_summary += " [💪 INSANE STRENGTH ACTIVE (Spent 3 Spite)]"
+        rolls_summary += " [💪 INSANE STRENGTH ACTIVE]"
 
     log_entry = {
         'round': round_num,
