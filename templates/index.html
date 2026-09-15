@@ -434,6 +434,7 @@
 
         const data = await res.json();
         if (!res.ok) {
+            alertBox.classList.add('hidden');
             alertBox.classList.remove('hidden');
             alertBox.innerText = data.message;
             return;
