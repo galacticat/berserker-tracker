@@ -176,7 +176,6 @@
         <div id="str-panel" class="section" style="display:none;">
             <h3>Step 2: Berserk Exhaustion (STR & Adds Reduction)</h3>
             
-            <!-- Persistent Round Damage Result Display -->
             <div id="persistent-damage-summary" class="summary-card"></div>
 
             <div class="instruction-card">
@@ -270,18 +269,46 @@
         updateDisplay();
     }
 
+    function getAvailableSpite() {
+        let totalSpent = state.spentSpiteThisRound;
+        if (state.insaneStrengthActive) {
+            totalSpent += 3; // Insane Strength costs 3 spite
+        }
+        return Math.max(0, state.currentSpiteTotal - totalSpent);
+    }
+
+    function updateFeatVisibility() {
+        const availableSpite = getAvailableSpite();
+        
+        // Update Spend 2 Spite to Berserk Box
+        if (!state.berserkActive && state.spentSpiteThisRound === 0 && availableSpite >= 2) {
+            document.getElementById('spend-spite-box').style.display = 'block';
+        } else {
+            document.getElementById('spend-spite-box').style.display = 'none';
+        }
+
+        // Update Insane Strength Box
+        if (state.hasInsaneStrengthFeat) {
+            if (state.insaneStrengthActive || availableSpite >= 3) {
+                document.getElementById('insane-strength-box').style.display = 'block';
+            } else {
+                document.getElementById('insane-strength-box').style.display = 'none';
+            }
+        }
+    }
+
     function spendSpiteForBerserk() {
         state.spentSpiteThisRound = 2;
         state.berserkActive = true;
-        document.getElementById('spend-spite-box').style.display = 'none';
         alert("🔥 Spent 2 Spite to activate Berserk mode! Berserk will remain active until you calm down or drop unconscious.");
         
-        const availableSpite = Math.max(0, state.currentSpiteTotal - state.spentSpiteThisRound);
-        if (availableSpite < 3) {
-            document.getElementById('insane-strength-box').style.display = 'none';
+        // Dynamic re-evaluation of Spite balance
+        if (getAvailableSpite() < 3 && state.insaneStrengthActive) {
             state.insaneStrengthActive = false;
-            updateDisplay();
         }
+        
+        updateFeatVisibility();
+        updateDisplay();
     }
 
     function toggleInsaneStrength() {
@@ -294,6 +321,8 @@
             btn.style.background = "var(--accent-purple)";
             btn.innerText = "💪 Activate Insane Strength (Double STR & Recalculate Adds)";
         }
+        
+        updateFeatVisibility();
         updateDisplay();
     }
 
@@ -364,6 +393,7 @@
             current_spite_total: state.currentSpiteTotal,
             spent_spite: state.spentSpiteThisRound,
             berserk_active: state.berserkActive,
+            insane_strength_active: state.insaneStrengthActive,
             roll_history: state.rollHistory,
             current_adds: getEffectiveAdds(),
             pending_sets: state.pendingSets,
@@ -389,17 +419,7 @@
         state.rollHistory = data.roll_history;
         renderBreakdown();
 
-        if (data.can_spend_for_berserk && !state.berserkActive) {
-            document.getElementById('spend-spite-box').style.display = 'block';
-        } else {
-            document.getElementById('spend-spite-box').style.display = 'none';
-        }
-
-        if (state.hasInsaneStrengthFeat && data.spite_triggered && !state.insaneStrengthActive) {
-            document.getElementById('insane-strength-box').style.display = 'block';
-        } else if (!data.spite_triggered) {
-            document.getElementById('insane-strength-box').style.display = 'none';
-        }
+        updateFeatVisibility();
 
         if (data.status === 'rollover') {
             state.pendingSets = data.pending_sets;
@@ -416,12 +436,10 @@
         } else if (data.status === 'damage_done') {
             state.finalDamageThisRound = data.final_total;
             
-            // Populate persistent damage summary inside Step 2
             document.getElementById('persistent-damage-summary').innerHTML = `
                 <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${data.message}
             `;
 
-            // Transition immediately to STR Loss panel without hiding the message box
             document.getElementById('damage-panel').style.display = 'none';
             document.getElementById('str-panel').style.display = 'block';
         }
