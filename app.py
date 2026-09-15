@@ -397,8 +397,19 @@ def next_round():
 
     if stopped:
         state['berserkActive'] = False
-        state['activePhase'] = 'summary'
-        state['summaryMsg'] = f"✨ You snapped out of the berserk rage!"
+        state['roundNum'] += 1
+        state['insaneStrengthActive'] = False
+        state['spentSpiteThisRound'] = 0
+        state['damageResolvedThisRound'] = False
+        state['lastDamageMessage'] = ""
+        state['expectedDice'] = state['activeWeaponDice']
+        state['currentDiceSum'] = 0
+        state['currentSpiteTotal'] = 0
+        state['finalDamageThisRound'] = 0
+        state['pendingSets'] = []
+        state['currentSetInfo'] = None
+        state['rollHistory'] = []
+        state['activePhase'] = 'damage'
     else:
         state['roundNum'] += 1
         state['insaneStrengthActive'] = False
