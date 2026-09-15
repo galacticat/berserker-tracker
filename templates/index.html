@@ -427,7 +427,7 @@
             </div>
 
             {% if not state.damageResolvedThisRound %}
-            <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4">
+            <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4" oninput="validateDiceInputUI(this)">
             <div>
                 <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
                 <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{ state.expectedDice }}d6</button>
@@ -686,11 +686,35 @@
         location.reload();
     }
 
+    function validateDiceInputUI(inputEl) {
+        const alertBox = document.getElementById('damage-alert');
+        const parts = inputEl.value.trim().replace(/,/g, ' ').split(/\s+/);
+        for (let p of parts) {
+            if (p !== '') {
+                const val = parseInt(p, 10);
+                if (isNaN(val) || val > 6 || val < 1) {
+                    alertBox.classList.remove('hidden');
+                    alertBox.innerText = `⚠️ Invalid value "${p}": Individual dice values must be between 1 and 6 on a d6 system!`;
+                    return false;
+                }
+            }
+        }
+        alertBox.classList.add('hidden');
+        return true;
+    }
+
     async function submitDamage(autoRoll) {
         const alertBox = document.getElementById('damage-alert');
         alertBox.classList.add('hidden');
 
-        const diceInput = document.getElementById('dice-input').value;
+        const diceInputEl = document.getElementById('dice-input');
+        if (!autoRoll && diceInputEl) {
+            if (!validateDiceInputUI(diceInputEl)) {
+                return;
+            }
+        }
+
+        const diceInput = diceInputEl ? diceInputEl.value : '';
         const diceCtrl = document.getElementById('current-dice-pool-input');
         const expectedDice = diceCtrl ? diceCtrl.value : null;
 
@@ -706,7 +730,6 @@
 
         const data = await res.json();
         if (!res.ok) {
-            alertBox.classList.add('hidden');
             alertBox.classList.remove('hidden');
             alertBox.innerText = data.message;
             return;
