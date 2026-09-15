@@ -100,15 +100,15 @@
             padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
         }
         
-        /* Stat Banner: Round on top row for mobile, 3-up on desktop */
+        /* Stat Banner Layout */
         .stat-banner {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: space-between;
             align-items: stretch;
-            gap: 10px;
+            gap: 8px;
             background: #1f0d38; 
-            padding: 12px; 
+            padding: 10px; 
             border-radius: 8px; 
             margin-bottom: 15px;
             border: 1px solid rgba(155, 93, 229, 0.3);
@@ -122,27 +122,33 @@
             flex-direction: column;
             justify-content: space-between;
         }
-        /* Mobile layout: Round is full width (1st row), STR & Adds share 2nd row */
+
+        /* Mobile View: Round on top row (reduced height), STR and Adds share second row */
         .stat-item.round-item {
             flex: 0 0 100%;
+            padding: 6px;
         }
         .stat-item.stat-subitem {
-            flex: 1 1 45%;
+            flex: 1 1 48%;
             min-width: 130px;
         }
 
-        /* Desktop layout (768px+): All 3 sit side-by-side */
+        /* Desktop View (768px+): All 3 items share a single row evenly */
         @media (min-width: 768px) {
+            .stat-banner {
+                justify-content: space-around;
+            }
             .stat-item.round-item {
-                flex: 1 1 auto;
+                flex: 1 1 0;
+                padding: 8px;
             }
             .stat-item.stat-subitem {
-                flex: 1 1 auto;
+                flex: 1 1 0;
             }
         }
 
-        .stat-val { font-size: 1.3em; font-weight: bold; color: var(--accent-gold); margin: 4px 0; }
-        @media (min-width: 768px) { .stat-val { font-size: 1.6em; } }
+        .stat-val { font-size: 1.2em; font-weight: bold; color: var(--accent-gold); margin: 2px 0; }
+        @media (min-width: 768px) { .stat-val { font-size: 1.6em; margin: 4px 0; } }
         .buff-controls { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
         .buff-btn { padding: 3px 6px; font-size: 0.7em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
         .buff-btn:hover { background: #6b3ca6; }
@@ -267,12 +273,12 @@
     <!-- MAIN DASHBOARD -->
     <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
         <div class="stat-banner">
-            <!-- ROUND (Row 1 on mobile, 1st item on desktop) -->
+            <!-- ROUND (Row 1 on mobile, reduced height) -->
             <div class="stat-item round-item">
-                <div>Round</div>
+                <div style="font-size: 0.85em;">Round</div>
                 <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
             </div>
-            <!-- STR BANNER ITEM (Row 2 on mobile, 2nd item on desktop) -->
+            <!-- STR BANNER ITEM (Row 2 on mobile, shares row with Adds) -->
             <div class="stat-item stat-subitem">
                 <div>Strength (STR)</div>
                 <div class="stat-val" id="disp-str">
@@ -289,7 +295,7 @@
                     <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
                 </div>
             </div>
-            <!-- ADDS BANNER ITEM (Row 2 on mobile, 3rd item on desktop) -->
+            <!-- ADDS BANNER ITEM (Row 2 on mobile, shares row with STR) -->
             <div class="stat-item stat-subitem">
                 <div>Active Adds</div>
                 <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
