@@ -100,12 +100,10 @@
             padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
         }
         
-        /* Stat Banner Layout */
+        /* Stat Banner Grid Layout for Mobile & Web */
         .stat-banner {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: stretch;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
             background: #1f0d38; 
             padding: 10px; 
@@ -123,34 +121,34 @@
             justify-content: space-between;
         }
 
-        /* Mobile View: Round on top row (reduced height), STR and Adds share second row */
+        /* Round spans both columns on top */
         .stat-item.round-item {
-            flex: 0 0 100%;
+            grid-column: span 2;
             padding: 6px;
         }
+        /* STR and Adds share the second row side-by-side */
         .stat-item.stat-subitem {
-            flex: 1 1 48%;
-            min-width: 130px;
+            grid-column: span 1;
         }
 
-        /* Desktop View (768px+): All 3 items share a single row evenly */
+        /* Desktop View (768px+): All 3 sit in a single row */
         @media (min-width: 768px) {
             .stat-banner {
-                justify-content: space-around;
+                grid-template-columns: repeat(3, 1fr);
             }
             .stat-item.round-item {
-                flex: 1 1 0;
+                grid-column: span 1;
                 padding: 8px;
             }
             .stat-item.stat-subitem {
-                flex: 1 1 0;
+                grid-column: span 1;
             }
         }
 
         .stat-val { font-size: 1.2em; font-weight: bold; color: var(--accent-gold); margin: 2px 0; }
         @media (min-width: 768px) { .stat-val { font-size: 1.6em; margin: 4px 0; } }
-        .buff-controls { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
-        .buff-btn { padding: 3px 6px; font-size: 0.7em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
+        .buff-controls { display: flex; gap: 3px; margin-top: 4px; justify-content: center; flex-wrap: nowrap; }
+        .buff-btn { padding: 3px 5px; font-size: 0.65em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
         .buff-btn:hover { background: #6b3ca6; }
         .section {
             background: #200e3a; padding: 14px; border-radius: 8px; margin-bottom: 15px;
@@ -273,7 +271,7 @@
     <!-- MAIN DASHBOARD -->
     <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
         <div class="stat-banner">
-            <!-- ROUND (Row 1 on mobile, reduced height) -->
+            <!-- ROUND (Row 1 on mobile, full width) -->
             <div class="stat-item round-item">
                 <div style="font-size: 0.85em;">Round</div>
                 <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
