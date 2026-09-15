@@ -127,6 +127,35 @@ def roll_damage():
             'message': f"✅ Damage resolved! Dice Sum: {new_dice_sum} + Adds (+{current_adds}) = {final_total} Total Damage. 🎯 Spite Damage Dealt: {new_spite_total}."
         })
 
+@app.route('/api/activate_berserk', methods=['POST'])
+def activate_berserk():
+    data = request.json or {}
+    roll_history = data.get('roll_history', [])
+    
+    if not roll_history:
+        return jsonify({'status': 'no_sets', 'pending_sets': []})
+    
+    # Analyze all dice rolled in the base weapon roll of this round for sets
+    base_roll = roll_history[0]['dice']
+    exploding_sets = analyze_roll(base_roll)
+    
+    if len(exploding_sets) > 0:
+        next_set = exploding_sets.pop(0)
+        action_instruction = (
+            f" Pick up the {next_set['count']} dice that rolled [{next_set['value']}]. "
+            f"Roll those exact {next_set['count']} dice for your {next_set['description']} and enter their new values below."
+        )
+        return jsonify({
+            'status': 'rollover',
+            'pending_sets': exploding_sets,
+            'current_set_info': next_set,
+            'expected_dice': next_set['count'],
+            'action_instruction': action_instruction,
+            'message': f"🔥 BERSERK ACTIVATED IMMEDIATELY! Resolving {next_set['description']} ({next_set['count']} dice)."
+        })
+    else:
+        return jsonify({'status': 'no_sets', 'pending_sets': []})
+
 @app.route('/api/roll_str_loss', methods=['POST'])
 def roll_str_loss():
     data = request.json or {}

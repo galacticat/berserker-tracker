@@ -323,7 +323,7 @@
         }
     }
 
-    function spendSpiteForBerserk() {
+    async function spendSpiteForBerserk() {
         state.spentSpiteThisRound = 2;
         state.berserkActive = true;
         
@@ -334,6 +334,33 @@
         document.getElementById('non-berserk-proceed-box').style.display = 'none';
         updateFeatVisibility();
         updateDisplay();
+
+        const res = await fetch('/api/activate_berserk', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ roll_history: state.rollHistory })
+        });
+        const data = await res.json();
+
+        if (data.status === 'rollover') {
+            state.pendingSets = data.pending_sets;
+            state.currentSetInfo = data.current_set_info;
+            state.expectedDice = data.expected_dice;
+            state.damageResolvedThisRound = false;
+            
+            document.getElementById('dice-adjust-box').style.display = 'none';
+            document.getElementById('submit-damage-btn').style.display = 'inline-block';
+            document.getElementById('auto-roll-btn').style.display = 'inline-block';
+            
+            document.getElementById('damage-title').innerText = "🔥 BERSERK EXPLOSION DETECTED!";
+            document.getElementById('action-text').innerHTML = `
+                <strong>${data.message}</strong><br><br>
+                👉 <strong>ACTION REQUIRED:</strong> ${data.action_instruction}
+            `;
+            document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
+            document.getElementById('dice-input').value = "";
+            return;
+        }
 
         if (state.damageResolvedThisRound) {
             document.getElementById('persistent-damage-summary').innerHTML = `
@@ -427,7 +454,6 @@
         const alertBox = document.getElementById('damage-alert');
         alertBox.style.display = 'none';
 
-        // Check if user updated the input box right before clicking roll/submit
         state.expectedDice = parseInt(document.getElementById('current-dice-pool-input').value) || state.expectedDice;
 
         const payload = {
@@ -471,7 +497,6 @@
             state.currentSetInfo = data.current_set_info;
             state.expectedDice = data.expected_dice;
             
-            // Hide custom dice pool adjustment during explosion set rollovers
             document.getElementById('dice-adjust-box').style.display = 'none';
 
             document.getElementById('damage-title').innerText = "🔥 BERSERK EXPLOSION DETECTED!";
