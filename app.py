@@ -112,14 +112,12 @@ def adjust_str():
         new_str = max(0, state['currentStr'] + delta)
         state['currentStr'] = new_str
         
+        warning_msg = None
         if new_str < state['minStrReq']:
-            deficit = state['minStrReq'] - new_str
-            state['activeWeaponDice'] = max(1, state['baseWeaponDice'] - deficit)
-        else:
-            state['activeWeaponDice'] = state['baseWeaponDice']
+            warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
 
         save_state(state)
-        return jsonify({'status': 'ok', 'state': state})
+        return jsonify({'status': 'ok', 'warning_msg': warning_msg, 'state': state})
     except ValueError:
         return jsonify({'message': 'Invalid adjustment amount.'}), 400
 
@@ -325,15 +323,9 @@ def roll_str_loss():
         adds_change_text = f"+{new_adds} (-{str_lost})"
         state['currentAdds'] = new_adds
 
-    effective_dice = state['baseWeaponDice']
     warning_msg = None
-
     if new_str < state['minStrReq']:
-        deficit = state['minStrReq'] - new_str
-        effective_dice = max(1, state['baseWeaponDice'] - deficit)
-        warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon requirement ({state['minStrReq']})! Dice pool reduced from {state['baseWeaponDice']}d6 to {effective_dice}d6."
-
-    state['activeWeaponDice'] = effective_dice
+        warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
 
     breakdown_strs = []
     for h in state['rollHistory']:

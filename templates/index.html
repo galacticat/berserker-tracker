@@ -575,11 +575,15 @@
     }
 
     async function adjustStr(delta) {
-        await fetch('/api/adjust_str', {
+        const res = await fetch('/api/adjust_str', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ delta: delta })
         });
+        const data = await res.json();
+        if (data.warning_msg) {
+            alert(data.warning_msg);
+        }
         location.reload();
     }
 
@@ -650,6 +654,9 @@
         if (!res.ok) {
             alert(data.message);
             return;
+        }
+        if (data.warning_msg) {
+            alert(data.warning_msg);
         }
         location.reload();
     }
