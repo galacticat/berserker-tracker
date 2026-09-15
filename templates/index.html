@@ -116,7 +116,7 @@
             </div>
         </div>
 
-        <button onclick="startCombat()">Begin Berserking Combat</button>
+        <button onclick="startCombat()">Begin Combat</button>
     </div>
 
     <!-- MAIN DASHBOARD -->
@@ -313,7 +313,6 @@
         updateFeatVisibility();
         updateDisplay();
 
-        // If damage was already resolved before spending spite, immediately transition to Step 2 (STR Loss)
         if (state.damageResolvedThisRound) {
             document.getElementById('persistent-damage-summary').innerHTML = `
                 <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
@@ -553,7 +552,8 @@
 
     function renderHistory() {
         const tbody = document.getElementById('history-table-body');
-        tbody.innerHTML = state.historyLog.map(row => `
+        // Render history in reverse order so latest round appears at the top
+        tbody.innerHTML = state.historyLog.slice().reverse().map(row => `
             <tr>
                 <td>${row.round}</td>
                 <td style="text-align:left; font-size:0.85em;">${row.dice_breakdown}</td>
