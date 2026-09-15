@@ -276,7 +276,7 @@
         historyLog: []
     };
 
-    const STORAGE_KEY = 'berserker_combat_state_v1';
+    const STORAGE_KEY = 'berserker_combat_persistent_v2';
 
     function saveStateToCache() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -284,41 +284,43 @@
 
     function loadStateFromCache() {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                const loaded = JSON.parse(saved);
-                if (loaded && loaded.inCombat) {
-                    state = loaded;
-                    
-                    // Force DOM display updates
-                    document.getElementById('setup-section').style.display = 'none';
-                    document.getElementById('combat-section').style.display = 'block';
-                    
-                    updateDisplay();
-                    renderHistory();
+        if (!saved) return;
+        
+        try {
+            const loaded = JSON.parse(saved);
+            if (loaded && loaded.inCombat) {
+                state = loaded;
 
-                    if (state.rollHistory && state.rollHistory.length > 0) {
-                        renderBreakdown();
-                    }
+                const setupSec = document.getElementById('setup-section');
+                const combatSec = document.getElementById('combat-section');
 
-                    if (state.damageResolvedThisRound && state.berserkActive) {
-                        document.getElementById('damage-panel').style.display = 'none';
-                        document.getElementById('str-panel').style.display = 'block';
-                        document.getElementById('persistent-damage-summary').innerHTML = `
-                            <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
-                        `;
-                    } else {
-                        document.getElementById('damage-panel').style.display = 'block';
-                        document.getElementById('str-panel').style.display = 'none';
-                        document.getElementById('current-dice-pool-input').value = state.expectedDice;
-                        document.getElementById('action-text').innerHTML = `Roll your <strong>${state.expectedDice} weapon dice</strong> and enter the ${state.expectedDice} values separated by spaces.`;
-                        document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
-                        updateFeatVisibility();
-                    }
+                if (setupSec) setupSec.style.display = 'none';
+                if (combatSec) combatSec.style.display = 'block';
+
+                updateDisplay();
+                renderHistory();
+
+                if (state.rollHistory && state.rollHistory.length > 0) {
+                    renderBreakdown();
                 }
-            } catch (e) {
-                console.error("Failed to load combat state from browser cache", e);
+
+                if (state.damageResolvedThisRound && state.berserkActive) {
+                    document.getElementById('damage-panel').style.display = 'none';
+                    document.getElementById('str-panel').style.display = 'block';
+                    document.getElementById('persistent-damage-summary').innerHTML = `
+                        <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
+                    `;
+                } else {
+                    document.getElementById('damage-panel').style.display = 'block';
+                    document.getElementById('str-panel').style.display = 'none';
+                    document.getElementById('current-dice-pool-input').value = state.expectedDice;
+                    document.getElementById('action-text').innerHTML = `Roll your <strong>${state.expectedDice} weapon dice</strong> and enter the ${state.expectedDice} values separated by spaces.`;
+                    document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
+                    updateFeatVisibility();
+                }
             }
+        } catch (e) {
+            console.error("Failed to load persistence state", e);
         }
     }
 
@@ -706,7 +708,8 @@
         saveStateToCache();
     }
 
-    document.addEventListener('DOMContentLoaded', loadStateFromCache);
+    // Run immediately when script is evaluated
+    loadStateFromCache();
 </script>
 </body>
 </html>
