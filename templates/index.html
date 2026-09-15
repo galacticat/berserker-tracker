@@ -22,24 +22,75 @@
             color: var(--text-color);
             margin: 0; padding: 10px;
             display: flex; justify-content: center;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* Sparkle Toggle Control in Upper Left */
+        .sparkle-toggle-wrapper {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(40, 19, 71, 0.85);
+            border: 1px solid rgba(241, 91, 181, 0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85em;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .sparkle-toggle-wrapper input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: var(--accent-unicorn);
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Sparkle Background Elements */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ffd166, 0 0 12px #f15bb5;
+            animation: twinkle var(--duration) infinite ease-in-out;
+            z-index: 0;
+            pointer-events: none;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.4); }
+        }
+
         .container {
             width: 100%; max-width: 950px;
             background: var(--card-bg);
             padding: 15px; border-radius: 12px;
             box-shadow: 0 8px 32px rgba(155, 93, 229, 0.3);
             border: 1px solid rgba(241, 91, 181, 0.2);
+            position: relative;
+            z-index: 1;
+            margin-top: 30px;
         }
         @media (min-width: 768px) {
             body { padding: 20px; }
-            .container { padding: 25px; }
+            .container { padding: 25px; margin-top: 10px; }
         }
         h1 { 
             color: var(--accent-unicorn); 
             text-align: center; 
             margin-top: 0; 
             font-size: 1.5rem; 
-            text-shadow: 0 2px 10px rgba(241, 91, 181, 0.4);
+            text-shadow: 0 2px 15px rgba(241, 91, 181, 0.6);
+            animation: headerGlow 3s infinite alternate;
+        }
+        @keyframes headerGlow {
+            0% { filter: drop-shadow(0 0 2px rgba(255, 209, 102, 0.4)); }
+            100% { filter: drop-shadow(0 0 10px rgba(241, 91, 181, 0.8)); }
         }
         @media (min-width: 768px) { h1 { font-size: 2rem; } }
         .rule-box {
@@ -129,6 +180,12 @@
     </style>
 </head>
 <body>
+
+<!-- Sparkle Toggle Checkbox in Upper Left -->
+<div class="sparkle-toggle-wrapper">
+    <input type="checkbox" id="sparkles-toggle" checked onchange="toggleSparkles()">
+    <label for="sparkles-toggle" style="margin-top:0; cursor:pointer; color:var(--text-color);">✨ Sparkles</label>
+</div>
 
 <div class="container">
     <h1>🦄🦄🦄 Jazzy Combat Dashboard 🦄🦄🦄</h1>
@@ -223,7 +280,7 @@
                     {% if state.currentSetInfo %}
                         Roll <strong>{{ state.expectedDice }} additional d6</strong> for your set of {{ state.currentSetInfo.val }}s!
                     {% else %}
-                        Roll your <strong>{{ state.expectedDice }} weapon dice</strong> and enter the {{ state.expectedDice }} values separated by spaces.
+                        Roll your <strong id="instruction-dice-count">{{ state.expectedDice }}</strong> weapon dice and enter the values separated by spaces.
                     {% endif %}
                 </div>
             </div>
@@ -231,7 +288,7 @@
             {% if not state.currentSetInfo %}
             <div id="dice-adjust-box" class="inline-dice-ctrl">
                 <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool For This Roll:</label>
-                <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1">
+                <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1" oninput="updateAutoRollButtonText()">
                 <span style="font-size:0.85em; color:#d8b4fe;">(Adjust anytime for buffs/weapon changes)</span>
             </div>
             {% endif %}
@@ -354,7 +411,7 @@
                         <td>{{ row.dice_sum }}</td>
                         <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
                         <td>{{ row.adds }}</td>
-                        <td style="font-weight:bold; color:var(--accent-gold);">&#x1F984; {{ row.total_damage }}</td>
+                        <td style="font-weight:bold; color:var(--accent-gold);">🦄 {{ row.total_damage }}</td>
                         <td>-{{ row.str_lost }}</td>
                         <td>{{ row.str_remaining }}</td>
                         <td>{{ row.adds_next }}</td>
@@ -368,6 +425,47 @@
 
 <script>
     const SETUP_DEFAULTS_KEY = 'mm_berserker_setup_defaults';
+
+    function initSparkles() {
+        const storedPref = sessionStorage.getItem('mm_sparkles_enabled');
+        const isEnabled = storedPref === null ? true : (storedPref === 'true');
+        
+        const toggleEl = document.getElementById('sparkles-toggle');
+        if (toggleEl) toggleEl.checked = isEnabled;
+
+        if (isEnabled) {
+            createSparkles();
+        }
+    }
+
+    function createSparkles() {
+        if (document.querySelectorAll('.sparkle').length > 0) return;
+        const sparkleCount = 25;
+        for (let i = 0; i < sparkleCount; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.classList.add('sparkle');
+            sparkle.style.top = Math.random() * 100 + 'vh';
+            sparkle.style.left = Math.random() * 100 + 'vw';
+            sparkle.style.setProperty('--duration', (2 + Math.random() * 3) + 's');
+            sparkle.style.animationDelay = (Math.random() * 3) + 's';
+            document.body.appendChild(sparkle);
+        }
+    }
+
+    function removeSparkles() {
+        document.querySelectorAll('.sparkle').forEach(el => el.remove());
+    }
+
+    function toggleSparkles() {
+        const toggleEl = document.getElementById('sparkles-toggle');
+        const isEnabled = toggleEl.checked;
+        sessionStorage.setItem('mm_sparkles_enabled', isEnabled);
+        if (isEnabled) {
+            createSparkles();
+        } else {
+            removeSparkles();
+        }
+    }
 
     function loadSetupDefaults() {
         const saved = localStorage.getItem(SETUP_DEFAULTS_KEY);
@@ -395,6 +493,17 @@
             hasInsaneStrength: document.getElementById('has-insane-strength').checked
         };
         localStorage.setItem(SETUP_DEFAULTS_KEY, JSON.stringify(defaults));
+    }
+
+    function updateAutoRollButtonText() {
+        const diceCtrl = document.getElementById('current-dice-pool-input');
+        const autoBtn = document.getElementById('auto-roll-btn');
+        const countSpan = document.getElementById('instruction-dice-count');
+        if (diceCtrl && autoBtn) {
+            const val = diceCtrl.value || '0';
+            autoBtn.innerText = `Auto-Roll ${val}d6`;
+            if (countSpan) countSpan.innerText = val;
+        }
     }
 
     async function startCombat() {
@@ -512,6 +621,8 @@
     }
 
     loadSetupDefaults();
+    updateAutoRollButtonText();
+    initSparkles();
 </script>
 </body>
 </html>
