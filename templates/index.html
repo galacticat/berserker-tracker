@@ -590,7 +590,6 @@
         const modal = document.getElementById('custom-modal');
         modal.classList.remove('show');
 
-        // Check if dice input was visible and confirmed
         const diceContainer = document.getElementById('modal-dice-container');
         if (!diceContainer.classList.contains('hidden') && result) {
             const newDiceVal = parseInt(document.getElementById('modal-dice-input').value, 10);
@@ -885,6 +884,11 @@
                 location.reload();
             }
         });
+    }
+
+    async function clearCombatStorage() {
+        await fetch('/api/reset_combat', { method: 'POST' });
+        location.reload();
     }
 
     loadSetupDefaults();
