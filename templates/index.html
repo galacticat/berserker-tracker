@@ -66,6 +66,7 @@
         button.alt { background: var(--accent-green); }
         button.gold { background: var(--accent-gold); color: #000; }
         button.purple { background: var(--accent-purple); color: #fff; }
+        button.reset { background: #555; color: #fff; margin-left: 10px; }
         .instruction-card {
             background: #382419; border: 2px solid var(--accent-gold); color: #ffe3a8;
             padding: 15px; border-radius: 6px; margin: 10px 0; line-height: 1.5; font-size: 1.05em;
@@ -81,6 +82,9 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         th, td { border: 1px solid #333; padding: 10px; text-align: center; }
         th { background: #1a1a20; color: var(--accent-gold); }
+        .header-row {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -218,11 +222,14 @@
         <div id="summary-panel" class="section" style="display:none;">
             <h3 style="color:var(--accent-gold);">Combat Finished</h3>
             <p id="summary-msg"></p>
-            <button onclick="location.reload()">Start New Combat</button>
+            <button onclick="clearCombatStorage()">Start New Combat</button>
         </div>
 
         <!-- LOG TABLE -->
-        <h3>📜 Combat Log & Adds Tracking</h3>
+        <div class="header-row">
+            <h3>📜 Combat Log & Adds Tracking</h3>
+            <button class="reset" onclick="clearCombatStorage()">🗑️ Reset Encounter Log</button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -268,6 +275,37 @@
         historyLog: []
     };
 
+    const STORAGE_KEY = 'berserker_combat_state';
+
+    function saveStateToCache() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadStateFromCache() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                state = JSON.parse(saved);
+                if (state.historyLog && state.historyLog.length > 0) {
+                    document.getElementById('setup-section').style.display = 'none';
+                    document.getElementById('combat-section').style.display = 'block';
+                    updateDisplay();
+                    renderHistory();
+                    resetRoundState();
+                }
+            } catch (e) {
+                console.error("Failed to load combat state from browser cache", e);
+            }
+        }
+    }
+
+    function clearCombatStorage() {
+        if (confirm("Clear combat log and start a fresh encounter?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
+
     function startCombat() {
         state.maxStr = parseInt(document.getElementById('max-str').value) || 40;
         state.currentStr = state.maxStr;
@@ -286,6 +324,7 @@
         
         resetRoundState();
         updateDisplay();
+        saveStateToCache();
     }
 
     function onDicePoolChange() {
@@ -294,6 +333,7 @@
             state.expectedDice = val;
             document.getElementById('action-text').innerHTML = `Roll your <strong>${state.expectedDice} weapon dice</strong> and enter the ${state.expectedDice} values separated by spaces.`;
             document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
+            saveStateToCache();
         }
     }
 
@@ -334,6 +374,7 @@
         document.getElementById('non-berserk-proceed-box').style.display = 'none';
         updateFeatVisibility();
         updateDisplay();
+        saveStateToCache();
 
         const res = await fetch('/api/activate_berserk', {
             method: 'POST',
@@ -360,6 +401,7 @@
             document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
             document.getElementById('dice-input').value = "";
             document.getElementById('dice-input').placeholder = `e.g. enter ${state.expectedDice} dice values`;
+            saveStateToCache();
             return;
         }
 
@@ -370,6 +412,7 @@
             document.getElementById('damage-panel').style.display = 'none';
             document.getElementById('str-panel').style.display = 'block';
         }
+        saveStateToCache();
     }
 
     function toggleInsaneStrength() {
@@ -385,6 +428,7 @@
         
         updateFeatVisibility();
         updateDisplay();
+        saveStateToCache();
     }
 
     function resetRoundState() {
@@ -426,6 +470,7 @@
         document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
         document.getElementById('dice-input').value = "";
         document.getElementById('dice-input').placeholder = "e.g. 6 6 3 4 2 1 5 4";
+        saveStateToCache();
     }
 
     function getEffectiveAdds() {
@@ -535,6 +580,7 @@
                 document.getElementById('str-panel').style.display = 'block';
             }
         }
+        saveStateToCache();
     }
 
     async function proceedNonBerserkRound() {
@@ -596,6 +642,7 @@
                 document.getElementById('round-end-panel').style.display = 'block';
             }
         }
+        saveStateToCache();
     }
 
     function nextRound(stopped) {
@@ -609,6 +656,7 @@
             updateDisplay();
             resetRoundState();
         }
+        saveStateToCache();
     }
 
     function renderHistory() {
@@ -631,7 +679,11 @@
     function showSummary(msg) {
         document.getElementById('summary-panel').style.display = 'block';
         document.getElementById('summary-msg').innerText = msg;
+        saveStateToCache();
     }
+
+    // Auto-load state on page load
+    window.onload = loadStateFromCache;
 </script>
 </body>
 </html>
