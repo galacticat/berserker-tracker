@@ -6,17 +6,19 @@
     <title>Monsters! Monsters! Berserker Tracker</title>
     <style>
         :root {
-            --bg-color: #121214;
-            --card-bg: #1e1e24;
-            --accent-red: #e63946;
-            --accent-gold: #ffb703;
+            --bg-color: #1a0b2e;
+            --card-bg: #281347;
+            --accent-pink: #ff70a6;
+            --accent-gold: #ffd166;
             --accent-green: #2a9d8f;
-            --accent-purple: #7209b7;
-            --text-color: #f1faee;
+            --accent-purple: #9b5de5;
+            --accent-unicorn: #f15bb5;
+            --text-color: #f8edeb;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
+            background: linear-gradient(135deg, #1a0b2e 0%, #3a105c 100%);
+            background-attachment: fixed;
             color: var(--text-color);
             margin: 0; padding: 10px;
             display: flex; justify-content: center;
@@ -25,75 +27,85 @@
             width: 100%; max-width: 950px;
             background: var(--card-bg);
             padding: 15px; border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(155, 93, 229, 0.3);
+            border: 1px solid rgba(241, 91, 181, 0.2);
         }
         @media (min-width: 768px) {
             body { padding: 20px; }
             .container { padding: 25px; }
         }
-        h1 { color: var(--accent-red); text-align: center; margin-top: 0; font-size: 1.5rem; }
+        h1 { 
+            color: var(--accent-unicorn); 
+            text-align: center; 
+            margin-top: 0; 
+            font-size: 1.5rem; 
+            text-shadow: 0 2px 10px rgba(241, 91, 181, 0.4);
+        }
         @media (min-width: 768px) { h1 { font-size: 2rem; } }
         .rule-box {
-            background: rgba(230, 57, 70, 0.15);
-            border-left: 4px solid var(--accent-red);
+            background: rgba(241, 91, 181, 0.15);
+            border-left: 4px solid var(--accent-unicorn);
             padding: 12px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em;
         }
         .stat-banner {
             display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center; gap: 10px;
-            background: #2b2b36; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            background: #1f0d38; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            border: 1px solid rgba(155, 93, 229, 0.3);
         }
         .stat-item { text-align: center; flex: 1; min-width: 120px; }
         .stat-val { font-size: 1.4em; font-weight: bold; color: var(--accent-gold); }
         @media (min-width: 768px) { .stat-val { font-size: 1.6em; } }
         .buff-controls { display: flex; gap: 4px; margin-top: 6px; justify-content: center; }
-        .buff-btn { padding: 4px 8px; font-size: 0.75em; border-radius: 4px; background: #444; color: #fff; cursor: pointer; border: none; }
-        .buff-btn:hover { background: #666; }
+        .buff-btn { padding: 4px 8px; font-size: 0.75em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
+        .buff-btn:hover { background: #6b3ca6; }
         .section {
-            background: #252530; padding: 18px; border-radius: 8px; margin-bottom: 15px;
+            background: #200e3a; padding: 18px; border-radius: 8px; margin-bottom: 15px;
+            border: 1px solid rgba(155, 93, 229, 0.2);
         }
-        label { display: block; margin-top: 8px; font-weight: bold; }
+        label { display: block; margin-top: 8px; font-weight: bold; color: #e0aaff; }
         .checkbox-container {
-            display: flex; align-items: center; gap: 10px; margin: 15px 0; background: #1a1a22; padding: 10px; border-radius: 6px;
+            display: flex; align-items: center; gap: 10px; margin: 15px 0; background: #18092c; padding: 10px; border-radius: 6px;
         }
-        .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent-unicorn); }
         input[type="text"], input[type="number"] {
-            background: #121214; border: 1px solid #444; color: #fff;
+            background: #140724; border: 1px solid #4a2875; color: #fff;
             padding: 10px 12px; border-radius: 4px; width: calc(100% - 26px); margin-bottom: 10px; font-size: 1em;
         }
         .inline-dice-ctrl {
-            display: flex; align-items: center; gap: 10px; background: #1a1a22; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 10px; background: #18092c; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px;
         }
         .inline-dice-ctrl input[type="number"] {
             width: 80px; margin-bottom: 0; font-weight: bold; text-align: center; color: var(--accent-gold);
         }
         button {
-            background: var(--accent-red); color: #fff; border: none;
+            background: var(--accent-purple); color: #fff; border: none;
             padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold;
             transition: 0.2s; margin-right: 5px; margin-top: 5px; font-size: 0.95em;
+            box-shadow: 0 4px 12px rgba(155, 93, 229, 0.3);
         }
-        button:hover { opacity: 0.85; }
+        button:hover { opacity: 0.85; filter: brightness(1.1); }
         button.alt { background: var(--accent-green); }
-        button.gold { background: var(--accent-gold); color: #000; }
-        button.purple { background: var(--accent-purple); color: #fff; }
+        button.gold { background: var(--accent-gold); color: #1a0b2e; }
+        button.purple { background: var(--accent-unicorn); color: #fff; }
         button.active-feat { background: #2a9d8f !important; color: #fff; }
-        button.reset { background: #555; color: #fff; margin-left: 10px; }
+        button.reset { background: #4a2875; color: #fff; margin-left: 10px; }
         .instruction-card {
-            background: #382419; border: 2px solid var(--accent-gold); color: #ffe3a8;
+            background: #2b124a; border: 2px solid var(--accent-unicorn); color: #ffd1dc;
             padding: 15px; border-radius: 6px; margin: 10px 0; line-height: 1.5; font-size: 1.05em;
         }
         .roll-breakdown {
-            background: #181820; border: 1px dashed #555; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; word-break: break-all;
+            background: #140724; border: 1px dashed #6b3ca6; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; word-break: break-all;
         }
-        .alert { background: #3d1c1d; color: #ff8e8e; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        .alert { background: #4a1535; color: #ffb3d9; padding: 10px; border-radius: 6px; margin-top: 10px; }
         .summary-card {
-            background: rgba(42, 157, 143, 0.15); border: 1px solid var(--accent-green);
+            background: rgba(42, 157, 143, 0.2); border: 1px solid var(--accent-green);
             color: #a8ebd9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 1.05em;
         }
         .spite-box {
-            margin-bottom: 12px; background: rgba(230, 57, 70, 0.2); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-red); border-left: 4px solid var(--accent-red);
+            margin-bottom: 12px; background: rgba(241, 91, 181, 0.15); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-unicorn); border-left: 4px solid var(--accent-unicorn);
         }
         .insane-box {
-            margin-bottom: 12px; background: rgba(114, 9, 183, 0.2); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-purple); border-left: 4px solid var(--accent-purple);
+            margin-bottom: 12px; background: rgba(155, 93, 229, 0.2); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-purple); border-left: 4px solid var(--accent-purple);
         }
         .table-responsive {
             width: 100%;
@@ -101,12 +113,12 @@
             -webkit-overflow-scrolling: touch;
             margin-top: 15px;
             border-radius: 6px;
-            border: 1px solid #333;
+            border: 1px solid #4a2875;
         }
         table { width: 100%; border-collapse: collapse; font-size: 0.85em; white-space: nowrap; }
         @media (min-width: 768px) { table { font-size: 0.9em; white-space: normal; } }
-        th, td { border: 1px solid #333; padding: 8px 10px; text-align: center; }
-        th { background: #1a1a20; color: var(--accent-gold); }
+        th, td { border: 1px solid #4a2875; padding: 8px 10px; text-align: center; }
+        th { background: #18092c; color: var(--accent-gold); }
         .header-row {
             display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 20px;
         }
@@ -119,7 +131,7 @@
 <body>
 
 <div class="container">
-    <h1>🪓 Berserker Combat Dashboard</h1>
+    <h1>🦄🦄🦄 Jazzy Combat Dashboard 🦄🦄🦄</h1>
     <div class="rule-box">
         <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. 1s deal Spite Damage directly! Pay 2 Spite once to enter Berserk. You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR.
     </div>
@@ -143,7 +155,7 @@
             <input type="checkbox" id="already-berserk" {% if state.berserkActive %}checked{% endif %} onchange="saveSetupDefaults()">
             <div>
                 <strong>Already Berserking at Start of Encounter?</strong>
-                <div style="font-size:0.85em; color:#aaa;">Uncheck if you need to pay 2 Spite on your first roll to enter Berserk mode.</div>
+                <div style="font-size:0.85em; color:#d8b4fe;">Uncheck if you need to pay 2 Spite on your first roll to enter Berserk mode.</div>
             </div>
         </div>
 
@@ -151,7 +163,7 @@
             <input type="checkbox" id="has-insane-strength" {% if state.hasInsaneStrengthFeat %}checked{% endif %} onchange="saveSetupDefaults()">
             <div>
                 <strong>Character Feat: 3/ Insane Strength</strong>
-                <div style="font-size:0.85em; color:#aaa;">Triggered on 3 Available Spite: "Your STR doubles for the current combat round! Refigure your combat adds."</div>
+                <div style="font-size:0.85em; color:#d8b4fe;">Triggered on 3 Available Spite: "Your STR doubles for the current combat round! Refigure your combat adds."</div>
             </div>
         </div>
 
@@ -199,7 +211,7 @@
         <div id="damage-panel" class="section {% if state.activePhase != 'damage' %}hidden{% endif %}">
             <h3 id="damage-title">
                 {% if state.currentSetInfo %}
-                    🔥 BERSERK EXPLOSION DETECTED!
+                    🦄 BERSERK EXPLOSION DETECTED!
                 {% else %}
                     Step 1: Roll Weapon Damage
                 {% endif %}
@@ -220,7 +232,7 @@
             <div id="dice-adjust-box" class="inline-dice-ctrl">
                 <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool For This Roll:</label>
                 <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1">
-                <span style="font-size:0.85em; color:#aaa;">(Adjust anytime for buffs/weapon changes)</span>
+                <span style="font-size:0.85em; color:#d8b4fe;">(Adjust anytime for buffs/weapon changes)</span>
             </div>
             {% endif %}
 
@@ -230,8 +242,8 @@
             <div id="spend-spite-box" class="spite-box {% if state.berserkActive or state.spentSpiteThisRound > 0 or available_spite < 2 %}hidden{% endif %}">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <strong style="color: var(--accent-gold);">🔥 BERSERK ACTIVATION AVAILABLE!</strong>
-                        <div style="margin-top: 4px; font-size: 0.9em; color: #f1faee;">You have 2+ available Spite. Spend 2 Spite to enter Berserk mode for this entire combat.</div>
+                        <strong style="color: var(--accent-gold);">🦄 BERSERK ACTIVATION AVAILABLE!</strong>
+                        <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 2+ available Spite. Spend 2 Spite to enter Berserk mode for this entire combat.</div>
                     </div>
                     <button type="button" class="gold" onclick="spendSpiteForBerserk()" style="margin-top: 0;">Activate Berserk (2 spite)</button>
                 </div>
@@ -241,12 +253,12 @@
             <div id="insane-strength-box" class="insane-box {% if not state.hasInsaneStrengthFeat or (not state.insaneStrengthActive and available_spite < 3) %}hidden{% endif %}">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <strong style="color: var(--accent-gold);">⚡ INSANE STRENGTH AVAILABLE!</strong>
-                        <div style="margin-top: 4px; font-size: 0.9em; color: #f1faee;">You have 3+ available Spite. Spend 3 Spite to double your STR for this round.</div>
+                        <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
+                        <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 3+ available Spite. Spend 3 Spite to double your STR for this round.</div>
                     </div>
                     <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn" onclick="toggleInsaneStrength()" style="margin-top: 0;">
                         {% if state.insaneStrengthActive %}
-                            💪 Insane Strength ACTIVE (STR Doubled)
+                            🦄 Insane Strength ACTIVE (STR Doubled)
                         {% else %}
                             Activate Insane Strength (3 spite)
                         {% endif %}
@@ -264,7 +276,7 @@
                 <strong>🎲 Current Round Rolls:</strong>
                 <div id="breakdown-text">
                     {% for h in state.rollHistory %}
-                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span style="color:var(--accent-red); font-weight:bold;">({{ h.spite }} Spite)</span></div>
+                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span></div>
                     {% endfor %}
                 </div>
             </div>
@@ -340,9 +352,9 @@
                         <td>{{ row.round }}</td>
                         <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
                         <td>{{ row.dice_sum }}</td>
-                        <td style="font-weight:bold; color:var(--accent-red);">{{ row.spite }}</td>
+                        <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
                         <td>{{ row.adds }}</td>
-                        <td style="font-weight:bold; color:var(--accent-gold);">{{ row.total_damage }}</td>
+                        <td style="font-weight:bold; color:var(--accent-gold);">&#x1F984; {{ row.total_damage }}</td>
                         <td>-{{ row.str_lost }}</td>
                         <td>{{ row.str_remaining }}</td>
                         <td>{{ row.adds_next }}</td>
