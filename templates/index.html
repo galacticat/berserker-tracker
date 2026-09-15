@@ -126,7 +126,7 @@
             </div>
         </div>
 
-        <button onclick="startCombat()">Begin Combat</button>
+        <button type="button" onclick="startCombat()">Begin Combat</button>
     </div>
 
     <!-- MAIN DASHBOARD -->
@@ -166,18 +166,18 @@
             <div id="spend-spite-box" style="display:none; margin-bottom: 12px; background: rgba(230, 57, 70, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-red);">
                 <strong style="color: var(--accent-gold);">🔥 SPITE ACTIVATION AVAILABLE!</strong>
                 <div style="margin: 5px 0 8px 0; font-size: 0.9em;">You rolled 2+ Spite. Spend 2 Spite to enter Berserk mode for this entire combat!</div>
-                <button class="gold" id="spend-spite-btn" onclick="spendSpiteForBerserk()">Spend 2 Spite to Activate Berserk</button>
+                <button type="button" class="gold" id="spend-spite-btn" onclick="spendSpiteForBerserk()">Spend 2 Spite to Activate Berserk</button>
             </div>
 
             <!-- INSANE STRENGTH OPTION -->
             <div id="insane-strength-box" style="display:none; margin-bottom: 12px; background: rgba(114, 9, 183, 0.2); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-purple);">
                 <strong style="color: var(--accent-gold);">⚡ 3 AVAILABLE SPITE DETECTED!</strong>
                 <div style="margin: 5px 0 8px 0; font-size: 0.9em;">Your Insane Strength feat requirement is met! You may activate it to double your STR for this round.</div>
-                <button class="purple" id="insane-btn" onclick="toggleInsaneStrength()">💪 Activate Insane Strength (Double STR & Recalculate Adds)</button>
+                <button type="button" class="purple" id="insane-btn" onclick="toggleInsaneStrength()">💪 Activate Insane Strength (Double STR & Recalculate Adds)</button>
             </div>
 
             <div id="non-berserk-proceed-box" style="display:none; margin-top: 15px;">
-                <button class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
+                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
             </div>
 
             <div id="breakdown-box" class="roll-breakdown" style="display:none;">
@@ -187,8 +187,8 @@
 
             <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4">
             <div>
-                <button onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
-                <button class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll Dice</button>
+                <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
+                <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll Dice</button>
             </div>
             <div id="damage-alert" class="alert" style="display:none;"></div>
         </div>
@@ -205,8 +205,8 @@
             </div>
             <input type="number" id="str-loss-input" placeholder="e.g. 4" min="1" max="6">
             <div>
-                <button onclick="submitStrLoss(false)">Submit 1d6 Loss</button>
-                <button class="alt" onclick="submitStrLoss(true)">Auto-Roll 1d6 Loss</button>
+                <button type="button" onclick="submitStrLoss(false)">Submit 1d6 Loss</button>
+                <button type="button" class="alt" onclick="submitStrLoss(true)">Auto-Roll 1d6 Loss</button>
             </div>
         </div>
 
@@ -214,21 +214,21 @@
         <div id="round-end-panel" class="section" style="display:none;">
             <h3>Step 3: End of Round Options</h3>
             <p>Did you make an IQ Saving Roll or did someone use a helping stunt to calm you down?</p>
-            <button class="gold" onclick="nextRound(true)">Yes, Stop Berserking</button>
-            <button onclick="nextRound(false)">No, Continue Berserking Next Round</button>
+            <button type="button" class="gold" onclick="nextRound(true)">Yes, Stop Berserking</button>
+            <button type="button" onclick="nextRound(false)">No, Continue Berserking Next Round</button>
         </div>
 
         <!-- SUMMARY PANEL -->
         <div id="summary-panel" class="section" style="display:none;">
             <h3 style="color:var(--accent-gold);">Combat Finished</h3>
             <p id="summary-msg"></p>
-            <button onclick="clearCombatStorage()">Start New Combat</button>
+            <button type="button" onclick="clearCombatStorage()">Start New Combat</button>
         </div>
 
         <!-- LOG TABLE -->
         <div class="header-row">
             <h3>📜 Combat Log & Adds Tracking</h3>
-            <button class="reset" onclick="clearCombatStorage()">🗑️ Reset Encounter Log</button>
+            <button type="button" class="reset" onclick="clearCombatStorage()">🗑️ Reset Encounter Log</button>
         </div>
         <table>
             <thead>
@@ -276,7 +276,7 @@
         historyLog: []
     };
 
-    const STORAGE_KEY = 'mm_berserker_state_v3';
+    const STORAGE_KEY = 'mm_berserker_combat_persistent';
 
     function saveStateToCache() {
         try {
@@ -711,9 +711,11 @@
         saveStateToCache();
     }
 
-    // Run immediately when DOM is ready
+    // Direct invocation
     restoreUI();
-    window.addEventListener('load', restoreUI);
+
+    // Fallback invocation on window load
+    window.onload = restoreUI;
 </script>
 </body>
 </html>
