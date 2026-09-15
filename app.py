@@ -97,7 +97,7 @@ def start_combat():
     state['currentAdds'] = int(data.get('initial_adds', 55))
     state['berserkActive'] = bool(data.get('already_berserk', False))
     state['hasInsaneStrengthFeat'] = bool(data.get('has_insane_strength', True))
-    state['expectedDice'] = state['baseWeaponDice']
+    state['expectedDice'] = state['activeWeaponDice']
     state['activePhase'] = 'damage'
 
     save_state(state)
@@ -134,6 +134,21 @@ def adjust_adds():
         return jsonify({'status': 'ok', 'state': state})
     except ValueError:
         return jsonify({'message': 'Invalid adjustment amount.'}), 400
+
+@app.route('/api/update_dice_pool', methods=['POST'])
+def update_dice_pool():
+    state = get_state()
+    data = request.json
+    try:
+        new_dice = int(data.get('dice_pool', state['activeWeaponDice']))
+        if new_dice < 1:
+            return jsonify({'message': 'Dice pool must be at least 1.'}), 400
+        state['activeWeaponDice'] = new_dice
+        state['expectedDice'] = new_dice
+        save_state(state)
+        return jsonify({'status': 'ok', 'state': state})
+    except ValueError:
+        return jsonify({'message': 'Invalid dice pool value.'}), 400
 
 def finalize_non_berserk_round(state):
     breakdown_strs = [f"{h['phase']}: [{', '.join(map(str, h['dice']))}] (={h['sum']})" for h in state['rollHistory']]
