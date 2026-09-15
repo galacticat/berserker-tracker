@@ -34,11 +34,13 @@
             padding: 12px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em;
         }
         .stat-banner {
-            display: flex; justify-content: space-around;
+            display: flex; justify-content: space-around; align-items: center;
             background: #2b2b36; padding: 15px; border-radius: 8px; margin-bottom: 20px;
         }
         .stat-item { text-align: center; }
         .stat-val { font-size: 1.6em; font-weight: bold; color: var(--accent-gold); }
+        .buff-controls { display: flex; gap: 4px; margin-top: 4px; justify-content: center; }
+        .buff-btn { padding: 3px 8px; font-size: 0.75em; border-radius: 4px; background: #444; }
         .section {
             background: #252530; padding: 18px; border-radius: 8px; margin-bottom: 15px;
         }
@@ -107,19 +109,19 @@
     <div id="setup-section" class="section {% if state.inCombat %}hidden{% endif %}">
         <h3>Character & Weapon Setup</h3>
         <label>Starting / Max Strength (STR):</label>
-        <input type="number" id="max-str" value="{{ state.maxStr }}" min="1">
+        <input type="number" id="max-str" value="{{ state.maxStr }}" min="1" onchange="saveSetupDefaults()">
         
         <label>Weapon Damage Dice Pool (e.g. 8 for 8d6 weapon):</label>
-        <input type="number" id="base-weapon-dice" value="{{ state.baseWeaponDice }}" min="1">
+        <input type="number" id="base-weapon-dice" value="{{ state.baseWeaponDice }}" min="1" onchange="saveSetupDefaults()">
 
         <label>Weapon Minimum STR Requirement:</label>
-        <input type="number" id="min-str-req" value="{{ state.minStrReq }}" min="1">
+        <input type="number" id="min-str-req" value="{{ state.minStrReq }}" min="1" onchange="saveSetupDefaults()">
 
         <label>Current Combat Adds (Bonus Damage):</label>
-        <input type="number" id="initial-adds" value="{{ state.currentAdds }}" min="0">
+        <input type="number" id="initial-adds" value="{{ state.currentAdds }}" min="0" onchange="saveSetupDefaults()">
 
         <div class="checkbox-container">
-            <input type="checkbox" id="already-berserk" {% if state.berserkActive %}checked{% endif %}>
+            <input type="checkbox" id="already-berserk" {% if state.berserkActive %}checked{% endif %} onchange="saveSetupDefaults()">
             <div>
                 <strong>Already Berserking at Start of Encounter?</strong>
                 <div style="font-size:0.85em; color:#aaa;">Uncheck if you need to pay 2 Spite on your first roll to enter Berserk mode.</div>
@@ -127,7 +129,7 @@
         </div>
 
         <div class="checkbox-container">
-            <input type="checkbox" id="has-insane-strength" {% if state.hasInsaneStrengthFeat %}checked{% endif %}>
+            <input type="checkbox" id="has-insane-strength" {% if state.hasInsaneStrengthFeat %}checked{% endif %} onchange="saveSetupDefaults()">
             <div>
                 <strong>Character Feat: 3/ Insane Strength</strong>
                 <div style="font-size:0.85em; color:#aaa;">Triggered on 3 Available Spite: "Your STR doubles for the current combat round! Refigure your combat adds."</div>
@@ -152,6 +154,13 @@
                     {% else %}
                         {{ state.currentStr }} / {{ state.maxStr }}
                     {% endif %}
+                </div>
+                <!-- MANUAL STR BUFF ADJUSTMENTS -->
+                <div class="buff-controls">
+                    <button type="button" class="buff-btn" onclick="adjustStr(5)" title="Buff +5 STR">+5</button>
+                    <button type="button" class="buff-btn" onclick="adjustStr(1)" title="Buff +1 STR">+1</button>
+                    <button type="button" class="buff-btn" onclick="adjustStr(-1)" title="Debuff -1 STR">-1</button>
+                    <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
                 </div>
             </div>
             <div class="stat-item">
@@ -310,7 +319,38 @@
 </div>
 
 <script>
+    const SETUP_DEFAULTS_KEY = 'mm_berserker_setup_defaults';
+
+    function loadSetupDefaults() {
+        const saved = localStorage.getItem(SETUP_DEFAULTS_KEY);
+        if (!saved) return;
+        try {
+            const defaults = JSON.parse(saved);
+            if (defaults.maxStr) document.getElementById('max-str').value = defaults.maxStr;
+            if (defaults.baseWeaponDice) document.getElementById('base-weapon-dice').value = defaults.baseWeaponDice;
+            if (defaults.minStrReq) document.getElementById('min-str-req').value = defaults.minStrReq;
+            if (defaults.initialAdds) document.getElementById('initial-adds').value = defaults.initialAdds;
+            if (defaults.alreadyBerserk !== undefined) document.getElementById('already-berserk').checked = defaults.alreadyBerserk;
+            if (defaults.hasInsaneStrength !== undefined) document.getElementById('has-insane-strength').checked = defaults.hasInsaneStrength;
+        } catch (e) {
+            console.error("Failed to load setup defaults", e);
+        }
+    }
+
+    function saveSetupDefaults() {
+        const defaults = {
+            maxStr: document.getElementById('max-str').value,
+            baseWeaponDice: document.getElementById('base-weapon-dice').value,
+            minStrReq: document.getElementById('min-str-req').value,
+            initialAdds: document.getElementById('initial-adds').value,
+            alreadyBerserk: document.getElementById('already-berserk').checked,
+            hasInsaneStrength: document.getElementById('has-insane-strength').checked
+        };
+        localStorage.setItem(SETUP_DEFAULTS_KEY, JSON.stringify(defaults));
+    }
+
     async function startCombat() {
+        saveSetupDefaults();
         const payload = {
             max_str: document.getElementById('max-str').value,
             base_weapon_dice: document.getElementById('base-weapon-dice').value,
@@ -323,6 +363,15 @@
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
+        });
+        location.reload();
+    }
+
+    async function adjustStr(delta) {
+        await fetch('/api/adjust_str', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ delta: delta })
         });
         location.reload();
     }
@@ -403,6 +452,8 @@
             location.reload();
         }
     }
+
+    loadSetupDefaults();
 </script>
 </body>
 </html>

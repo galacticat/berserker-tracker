@@ -109,6 +109,27 @@ def start_combat():
     save_state(state)
     return jsonify({'status': 'ok', 'state': state})
 
+@app.route('/api/adjust_str', methods=['POST'])
+def adjust_str():
+    state = get_state()
+    data = request.json
+    try:
+        delta = int(data.get('delta', 0))
+        new_str = max(0, state['currentStr'] + delta)
+        state['currentStr'] = new_str
+        
+        # Recalculate weapon dice requirement
+        if new_str < state['minStrReq']:
+            deficit = state['minStrReq'] - new_str
+            state['activeWeaponDice'] = max(1, state['baseWeaponDice'] - deficit)
+        else:
+            state['activeWeaponDice'] = state['baseWeaponDice']
+
+        save_state(state)
+        return jsonify({'status': 'ok', 'state': state})
+    except ValueError:
+        return jsonify({'message': 'Invalid adjustment amount.'}), 400
+
 def finalize_non_berserk_round(state):
     breakdown_strs = [f"{h['phase']}: [{', '.join(map(str, h['dice']))}] (={h['sum']})" for h in state['rollHistory']]
     effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
@@ -198,10 +219,9 @@ def roll_damage():
     if state['berserkActive']:
         state['activePhase'] = 'str_loss'
     else:
-        # Check if Spite options are unlocked (2+ Spite for Berserk, 3+ for Insane Strength)
         has_spite_options = (state['currentSpiteTotal'] >= 2) or (state['hasInsaneStrengthFeat'] and state['currentSpiteTotal'] >= 3)
         if has_spite_options:
-            state['activePhase'] = 'damage' # Hold on damage screen so player can pick Spite options
+            state['activePhase'] = 'damage'
         else:
             finalize_non_berserk_round(state)
 
