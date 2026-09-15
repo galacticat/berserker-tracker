@@ -35,6 +35,7 @@ def get_default_state():
         'finalDamageThisRound': 0,
         'lastDamageMessage': "",
         'damageResolvedThisRound': False,
+        'minStrWarningTriggered': False,
         'pendingSets': [],
         'currentSetInfo': None,
         'rollHistory': [],
@@ -98,6 +99,7 @@ def start_combat():
     state['berserkActive'] = bool(data.get('already_berserk', False))
     state['hasInsaneStrengthFeat'] = bool(data.get('has_insane_strength', True))
     state['expectedDice'] = state['activeWeaponDice']
+    state['minStrWarningTriggered'] = False
     state['activePhase'] = 'damage'
 
     save_state(state)
@@ -114,7 +116,12 @@ def adjust_str():
         
         warning_msg = None
         if new_str < state['minStrReq']:
-            warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
+            if not state['minStrWarningTriggered']:
+                warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
+                state['minStrWarningTriggered'] = True
+        else:
+            # Reset warning trigger if STR rises back above minimum
+            state['minStrWarningTriggered'] = False
 
         save_state(state)
         return jsonify({'status': 'ok', 'warning_msg': warning_msg, 'state': state})
@@ -325,7 +332,11 @@ def roll_str_loss():
 
     warning_msg = None
     if new_str < state['minStrReq']:
-        warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
+        if not state['minStrWarningTriggered']:
+            warning_msg = f"⚠️ WARNING: Your Strength ({new_str}) fell below weapon minimum requirement ({state['minStrReq']})! Please adjust your dice pool if needed."
+            state['minStrWarningTriggered'] = True
+    else:
+        state['minStrWarningTriggered'] = False
 
     breakdown_strs = []
     for h in state['rollHistory']:
