@@ -295,10 +295,8 @@
             if (loaded && loaded.inCombat) {
                 state = loaded;
 
-                const setupSec = document.getElementById('setup-section');
-                const combatSec = document.getElementById('combat-section');
-                if (setupSec) setupSec.style.display = 'none';
-                if (combatSec) combatSec.style.display = 'block';
+                document.getElementById('setup-section').style.display = 'none';
+                document.getElementById('combat-section').style.display = 'block';
 
                 updateDisplay();
                 renderHistory();
@@ -307,15 +305,28 @@
                     renderBreakdown();
                 }
 
-                if (state.damageResolvedThisRound && state.berserkActive) {
-                    document.getElementById('damage-panel').style.display = 'none';
-                    document.getElementById('str-panel').style.display = 'block';
-                    document.getElementById('persistent-damage-summary').innerHTML = `
-                        <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
-                    `;
+                // Reset all sub-panels
+                document.getElementById('damage-panel').style.display = 'none';
+                document.getElementById('str-panel').style.display = 'none';
+                document.getElementById('round-end-panel').style.display = 'none';
+                document.getElementById('summary-panel').style.display = 'none';
+
+                // Restore active phase sub-panel
+                if (!state.berserkActive && state.historyLog.length > 0 && state.roundNum > 1) {
+                    document.getElementById('summary-panel').style.display = 'block';
+                } else if (state.damageResolvedThisRound && state.berserkActive) {
+                    const currentRoundRecorded = state.historyLog.some(h => h.round === state.roundNum);
+                    
+                    if (currentRoundRecorded) {
+                        document.getElementById('round-end-panel').style.display = 'block';
+                    } else {
+                        document.getElementById('str-panel').style.display = 'block';
+                        document.getElementById('persistent-damage-summary').innerHTML = `
+                            <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
+                        `;
+                    }
                 } else {
                     document.getElementById('damage-panel').style.display = 'block';
-                    document.getElementById('str-panel').style.display = 'none';
                     document.getElementById('current-dice-pool-input').value = state.expectedDice;
                     document.getElementById('action-text').innerHTML = `Roll your <strong>${state.expectedDice} weapon dice</strong> and enter the ${state.expectedDice} values separated by spaces.`;
                     document.getElementById('auto-roll-btn').innerText = `Auto-Roll ${state.expectedDice}d6`;
@@ -711,10 +722,7 @@
         saveStateToCache();
     }
 
-    // Direct invocation
     restoreUI();
-
-    // Fallback invocation on window load
     window.onload = restoreUI;
 </script>
 </body>
