@@ -41,6 +41,7 @@ def roll_damage():
     expected_dice = int(data.get('expected_dice', 3))
     current_dice_sum = int(data.get('current_dice_sum', 0))
     current_spite_total = int(data.get('current_spite_total', 0))
+    spent_spite = int(data.get('spent_spite', 0))
     roll_history = data.get('roll_history', [])
     current_adds = int(data.get('current_adds', 0))
     pending_sets = data.get('pending_sets', [])
@@ -60,10 +61,13 @@ def roll_damage():
     dice_sum = sum(dice)
     new_dice_sum = current_dice_sum + dice_sum
     
-    # Track 1s rolled in this specific roll phase and add to total spite
     phase_spite = dice.count(1)
     new_spite_total = current_spite_total + phase_spite
-    spite_triggered = new_spite_total >= 3
+    
+    # Calculate available spite after deducting spent spite (e.g., 2 spent for Berserk activation)
+    available_spite_for_feats = max(0, new_spite_total - spent_spite)
+    spite_triggered = available_spite_for_feats >= 3
+    can_spend_for_berserk = (available_spite_for_feats >= 2) and (spent_spite == 0)
     
     if current_set_info:
         phase_label = f"Roll-Over for {current_set_info['description']}"
@@ -92,6 +96,8 @@ def roll_damage():
             'rolled_dice': dice,
             'current_dice_sum': new_dice_sum,
             'current_spite_total': new_spite_total,
+            'available_spite_for_feats': available_spite_for_feats,
+            'can_spend_for_berserk': can_spend_for_berserk,
             'pending_sets': all_pending_sets,
             'current_set_info': next_set,
             'expected_dice': next_set['count'],
@@ -107,6 +113,8 @@ def roll_damage():
             'rolled_dice': dice,
             'current_dice_sum': new_dice_sum,
             'current_spite_total': new_spite_total,
+            'available_spite_for_feats': available_spite_for_feats,
+            'can_spend_for_berserk': can_spend_for_berserk,
             'final_total': final_total,
             'roll_history': roll_history,
             'spite_triggered': spite_triggered,
@@ -128,6 +136,7 @@ def roll_str_loss():
     final_damage = int(data.get('final_damage', 0))
     dice_sum = int(data.get('dice_sum', 0))
     spite_total = int(data.get('spite_total', 0))
+    spent_spite = int(data.get('spent_spite', 0))
     roll_history = data.get('roll_history', [])
     history_log = data.get('history_log', [])
     insane_strength_active = data.get('insane_strength_active', False)
@@ -153,8 +162,10 @@ def roll_str_loss():
         warning_msg = None
 
     rolls_summary = " ➔ ".join([f"{r['phase']}: {r['dice']} (={r['sum']})" for r in roll_history])
+    if spent_spite > 0:
+        rolls_summary += f" [🔥 Spent {spent_spite} Spite to Activate Berserk]"
     if insane_strength_active:
-        rolls_summary += " [💪 INSANE STRENGTH TRIGGERED]"
+        rolls_summary += " [💪 INSANE STRENGTH ACTIVE]"
 
     log_entry = {
         'round': round_num,
