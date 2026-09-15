@@ -252,6 +252,7 @@
 
 <script>
     let state = {
+        inCombat: false,
         maxStr: 40,
         currentStr: 40,
         baseWeaponDice: 8,
@@ -285,13 +286,25 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             try {
-                state = JSON.parse(saved);
-                if (state.historyLog && state.historyLog.length > 0) {
+                const loaded = JSON.parse(saved);
+                if (loaded && loaded.inCombat) {
+                    state = loaded;
                     document.getElementById('setup-section').style.display = 'none';
                     document.getElementById('combat-section').style.display = 'block';
                     updateDisplay();
                     renderHistory();
-                    resetRoundState();
+                    if (state.rollHistory && state.rollHistory.length > 0) {
+                        renderBreakdown();
+                    }
+                    if (state.damageResolvedThisRound && state.berserkActive) {
+                        document.getElementById('damage-panel').style.display = 'none';
+                        document.getElementById('str-panel').style.display = 'block';
+                        document.getElementById('persistent-damage-summary').innerHTML = `
+                            <strong>💥 Round ${state.roundNum} Damage Results:</strong> ${state.lastDamageMessage}
+                        `;
+                    } else {
+                        updateFeatVisibility();
+                    }
                 }
             } catch (e) {
                 console.error("Failed to load combat state from browser cache", e);
@@ -307,6 +320,7 @@
     }
 
     function startCombat() {
+        state.inCombat = true;
         state.maxStr = parseInt(document.getElementById('max-str').value) || 40;
         state.currentStr = state.maxStr;
         state.baseWeaponDice = parseInt(document.getElementById('base-weapon-dice').value) || 8;
@@ -682,7 +696,6 @@
         saveStateToCache();
     }
 
-    // Auto-load state on page load
     window.onload = loadStateFromCache;
 </script>
 </body>
