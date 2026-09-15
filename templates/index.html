@@ -711,10 +711,8 @@
         saveStateToCache();
     }
 
-    // Try loading immediately
     loadStateFromCache();
 
-    // Fallback load once DOM elements render fully
     window.addEventListener('load', function() {
         loadStateFromCache();
     });
