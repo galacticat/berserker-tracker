@@ -100,7 +100,7 @@
             padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
         }
         
-        /* Stat Banner Grid Layout: Round on Top, STR & Adds Sharing Second Row */
+        /* Stat Banner Grid Layout: Mobile 2-row layout, Desktop 3 equal columns */
         .stat-banner {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -351,12 +351,12 @@
     <!-- MAIN DASHBOARD -->
     <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
         <div class="stat-banner">
-            <!-- ROUND (Row 1 on mobile, full width) -->
+            <!-- ROUND -->
             <div class="stat-item round-item">
                 <div style="font-size: 0.85em;">Round</div>
                 <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
             </div>
-            <!-- STR BANNER ITEM (Row 2 on mobile, shares row with Adds) -->
+            <!-- STR BANNER ITEM -->
             <div class="stat-item stat-subitem">
                 <div>Strength (STR)</div>
                 <div class="stat-val" id="disp-str">
@@ -373,7 +373,7 @@
                     <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
                 </div>
             </div>
-            <!-- ADDS BANNER ITEM (Row 2 on mobile, shares row with STR) -->
+            <!-- ADDS BANNER ITEM -->
             <div class="stat-item stat-subitem">
                 <div>Active Adds</div>
                 <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
