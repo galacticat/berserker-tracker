@@ -122,7 +122,7 @@
         }
         .stat-item.round-item {
             grid-column: span 2;
-            padding: 6px;
+            padding: 8px;
         }
         .stat-item.stat-subitem {
             grid-column: span 1;
@@ -354,7 +354,9 @@
             <!-- ROUND -->
             <div class="stat-item round-item">
                 <div style="font-size: 0.85em;">Round</div>
-                <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
+                <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
+                    <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
+                </div>
             </div>
             <!-- STR BANNER ITEM -->
             <div class="stat-item stat-subitem">
