@@ -290,27 +290,6 @@ def activate_berserk():
     state['abilityActivatedThisRound'] = True
     state['showGreenBannerAfterNext'] = False
     
-    all_sets = []
-    for h in state['rollHistory']:
-        all_sets.extend(find_sets(h['dice']))
-
-    if all_sets:
-        state['pendingSets'] = all_sets
-        next_set = state['pendingSets'].pop(0)
-        state['currentSetInfo'] = next_set
-        state['expectedDice'] = next_set['count']
-        state['damageResolvedThisRound'] = False
-        state['abilityActivatedThisRound'] = False
-        state['activePhase'] = 'damage'
-        save_state(state)
-
-        return jsonify({
-            'status': 'rollover',
-            'message': f"💥 BERSERK ACTIVATED! Retroactive Matching set found: {next_set['count']}x [{next_set['val']}s]. Roll {next_set['count']} additional dice!",
-            'action_instruction': f"Roll {next_set['count']} additional d6 for your set of {next_set['val']}s.",
-            'state': state
-        })
-
     effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
     final_total = state['currentDiceSum'] + effective_adds
     state['finalDamageThisRound'] = final_total
