@@ -401,7 +401,7 @@
                 {% endif %}
             </h3>
             
-            <div id="action-box" class="instruction-card">
+            <div id="action-box" class="instruction-card {% if state.damageResolvedThisRound %}hidden{% endif %}">
                 <strong>📋 WHAT TO DO NOW:</strong>
                 <div id="action-text">
                     {% if state.currentSetInfo %}
