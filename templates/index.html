@@ -421,7 +421,7 @@
             {% set show_spite_options_banner = state.damageResolvedThisRound and has_spite_options and not state.berserkActive and not state.abilityActivatedThisRound %}
             {% set show_next_button_after_ability = state.damageResolvedThisRound and state.abilityActivatedThisRound and state.showGreenBannerAfterNext %}
 
-            <!-- 1. NORMAL GREEN DAMAGE RESULT & PROCEED BANNER (NO SPITE OPTIONS OR ALREADY BERSERK) -->
+            <!-- 1. NORMAL GREEN DAMAGE RESULT & PROCEED BANNER -->
             <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not show_normal_green_banner and not show_next_button_after_ability %}hidden{% endif %}">
                 <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 10px;">
                     <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> <span id="damage-msg-span">{{ state.lastDamageMessage }}</span>
@@ -448,14 +448,16 @@
                 </div>
             </div>
 
-            <!-- INSANE STRENGTH OPTION -->
+            <!-- INSANE STRENGTH OPTION (Disabled if remaining spite after activating Berserk is < 3) -->
+            {% set remaining_after_berserk = [0, available_spite - (0 if state.berserkActive else 2)]|max %}
+            {% set can_afford_insane = state.hasInsaneStrengthFeat and (state.insaneStrengthActive or remaining_after_berserk >= 3) %}
             <div id="insane-strength-box" class="insane-box {% if not state.hasInsaneStrengthFeat or (not state.insaneStrengthActive and available_spite < 3) %}hidden{% endif %}">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
                         <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 3+ available Spite. Spend 3 Spite to double your STR for this round.</div>
                     </div>
-                    <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn" onclick="toggleInsaneStrength()" style="margin-top: 0;">
+                    <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %} {% if not can_afford_insane and not state.insaneStrengthActive %}disabled{% endif %}" id="insane-btn" {% if not can_afford_insane and not state.insaneStrengthActive %}disabled title="Not enough spite left over!"{% else %}onclick="toggleInsaneStrength()"{% endif %} style="margin-top: 0;">
                         {% if state.insaneStrengthActive %}
                             🦄 Insane Strength ACTIVE (STR Doubled)
                         {% else %}

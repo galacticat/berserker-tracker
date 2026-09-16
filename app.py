@@ -278,6 +278,22 @@ def proceed_non_berserk():
 def advance_after_ability():
     state = get_state()
     if state['abilityActivatedThisRound'] and not state['showGreenBannerAfterNext']:
+        # If Berserk was activated for the first time, check for initial sets now when Next is clicked
+        if state['berserkActive'] and not state['currentSetInfo']:
+            all_sets = []
+            for h in state['rollHistory']:
+                all_sets.extend(find_sets(h['dice']))
+            if all_sets:
+                state['pendingSets'] = all_sets
+                next_set = state['pendingSets'].pop(0)
+                state['currentSetInfo'] = next_set
+                state['expectedDice'] = next_set['count']
+                state['damageResolvedThisRound'] = False
+                state['abilityActivatedThisRound'] = False
+                state['activePhase'] = 'damage'
+                save_state(state)
+                return jsonify({'status': 'rollover', 'state': state})
+
         state['showGreenBannerAfterNext'] = True
         save_state(state)
     return jsonify({'status': 'ok', 'state': state})
@@ -289,7 +305,13 @@ def activate_berserk():
     state['berserkActive'] = True
     state['abilityActivatedThisRound'] = True
     state['showGreenBannerAfterNext'] = False
-    
+
+    # If Insane Strength was also active, but remaining spite is now under 3, turn it off
+    total_spent = state['spentSpiteThisRound'] + (3 if state['insaneStrengthActive'] else 0)
+    available_spite = max(0, state['currentSpiteTotal'] - total_spent)
+    if state['insaneStrengthActive'] and available_spite < 0:
+        state['insaneStrengthActive'] = False
+
     effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
     final_total = state['currentDiceSum'] + effective_adds
     state['finalDamageThisRound'] = final_total
@@ -303,7 +325,7 @@ def activate_berserk():
 def toggle_insane_strength():
     state = get_state()
     state['insaneStrengthActive'] = not state['insaneStrengthActive']
-    state['abilityActivatedThisRound'] = state['insaneStrengthActive']
+    state['abilityActivatedThisRound'] = state['insaneStrengthActive'] or state['berserkActive']
     state['showGreenBannerAfterNext'] = False
     
     if state['damageResolvedThisRound']:
