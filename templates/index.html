@@ -416,9 +416,9 @@
             {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
             {% set has_spite_options = (available_spite >= 2) or (state.hasInsaneStrengthFeat and available_spite >= 3) %}
             
-            <!-- Conditions for Banners -->
+            <!-- Strict visibility conditions -->
             {% set show_normal_green_banner = state.damageResolvedThisRound and (not has_spite_options or state.berserkActive) %}
-            {% set show_spite_options_banner = state.damageResolvedThisRound and has_spite_options and not state.berserkActive %}
+            {% set show_spite_options_banner = state.damageResolvedThisRound and has_spite_options and not state.berserkActive and not state.abilityActivatedThisRound %}
             {% set show_next_button_after_ability = state.damageResolvedThisRound and state.abilityActivatedThisRound and state.showGreenBannerAfterNext %}
 
             <!-- 1. NORMAL GREEN DAMAGE RESULT & PROCEED BANNER (NO SPITE OPTIONS OR ALREADY BERSERK) -->
@@ -438,7 +438,7 @@
             {% endif %}
 
             <!-- SPITE BERSERK ACTIVATION -->
-            <div id="spend-spite-box" class="spite-box {% if state.berserkActive or state.spentSpiteThisRound > 0 or available_spite < 2 or state.abilityActivatedThisRound %}hidden{% endif %}">
+            <div id="spend-spite-box" class="spite-box {% if state.berserkActive or state.spentSpiteThisRound > 0 or available_spite < 2 %}hidden{% endif %}">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <strong style="color: var(--accent-gold);">🦄 BERSERK ACTIVATION AVAILABLE!</strong>
@@ -449,7 +449,7 @@
             </div>
 
             <!-- INSANE STRENGTH OPTION -->
-            <div id="insane-strength-box" class="insane-box {% if not state.hasInsaneStrengthFeat or (not state.insaneStrengthActive and available_spite < 3) or state.abilityActivatedThisRound %}hidden{% endif %}">
+            <div id="insane-strength-box" class="insane-box {% if not state.hasInsaneStrengthFeat or (not state.insaneStrengthActive and available_spite < 3) %}hidden{% endif %}">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
@@ -467,9 +467,6 @@
 
             <!-- 2. SPITE OPTIONS AVAILABLE BUT NOT YET SELECTED (FORFEIT / PROCEED BUTTON) -->
             <div id="forfeit-spite-proceed-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not show_spite_options_banner %}hidden{% endif %}">
-                <div class="summary-card" style="margin-bottom: 10px;">
-                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
-                </div>
                 <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round (Forfeit Spite Options)</button>
             </div>
 
