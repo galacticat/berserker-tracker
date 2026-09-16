@@ -412,6 +412,19 @@
                 </div>
             </div>
 
+            {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
+            {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
+            {% set has_spite_options = (available_spite >= 2) or (state.hasInsaneStrengthFeat and available_spite >= 3) %}
+            {% set show_proceed_banner = state.damageResolvedThisRound and (not has_spite_options or state.insaneStrengthActive) %}
+
+            <!-- GREEN DAMAGE RESULT & PROCEED BANNER (NOW PLACED ABOVE DICE POOL) -->
+            <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not show_proceed_banner %}hidden{% endif %}">
+                <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 10px;">
+                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> <span id="damage-msg-span">{{ state.lastDamageMessage }}</span>
+                </div>
+                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
+            </div>
+
             {% if not state.currentSetInfo %}
             <div id="dice-adjust-box" class="inline-dice-ctrl">
                 <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool:</label>
@@ -421,8 +434,6 @@
             {% endif %}
 
             <!-- SPITE BERSERK ACTIVATION -->
-            {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
-            {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
             <div id="spend-spite-box" class="spite-box {% if state.berserkActive or state.spentSpiteThisRound > 0 or available_spite < 2 %}hidden{% endif %}">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div>
@@ -450,14 +461,15 @@
                 </div>
             </div>
 
-            {% set has_spite_options = (state.currentSpiteTotal >= 2) or (state.hasInsaneStrengthFeat and state.currentSpiteTotal >= 3) %}
-            {% set show_proceed_banner = state.damageResolvedThisRound and (not has_spite_options or state.insaneStrengthActive) %}
-            <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not show_proceed_banner %}hidden{% endif %}">
-                <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 10px;">
-                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> <span id="damage-msg-span">{{ state.lastDamageMessage }}</span>
+            <!-- FORFEIT / PROCEED BUTTON WHEN SPITE OPTIONS ARE AVAILABLE -->
+            {% if state.damageResolvedAndNotBerserkYet is defined or (state.damageResolvedThisRound and has_spite_options and not state.insaneStrengthActive) %}
+            <div id="forfeit-spite-proceed-box" style="margin-top: 15px; margin-bottom: 15px;">
+                <div class="summary-card" style="margin-bottom: 10px;">
+                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
                 </div>
-                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
+                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round (Forfeit Spite Options)</button>
             </div>
+            {% endif %}
 
             <div id="breakdown-box" class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
                 <strong>🎲 Current Round Rolls:</strong>
