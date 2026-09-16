@@ -37,6 +37,8 @@ def get_default_state():
         'finalDamageThisRound': 0,
         'lastDamageMessage': "",
         'damageResolvedThisRound': False,
+        'abilityActivatedThisRound': False,
+        'showGreenBannerAfterNext': False,
         'minStrWarningTriggered': False,
         'pendingSets': [],
         'currentSetInfo': None,
@@ -182,6 +184,8 @@ def finalize_non_berserk_round(state):
     state['insaneStrengthActive'] = False
     state['spentSpiteThisRound'] = 0
     state['damageResolvedThisRound'] = False
+    state['abilityActivatedThisRound'] = False
+    state['showGreenBannerAfterNext'] = False
     state['expectedDice'] = state['activeWeaponDice']
     state['currentDiceSum'] = 0
     state['currentSpiteTotal'] = 0
@@ -243,6 +247,8 @@ def roll_damage():
     final_total = state['currentDiceSum'] + effective_adds
     state['finalDamageThisRound'] = final_total
     state['damageResolvedThisRound'] = True
+    state['abilityActivatedThisRound'] = False
+    state['showGreenBannerAfterNext'] = False
     
     spite_msg = f" (Dealt {state['currentSpiteTotal']} direct Spite Damage!)" if state['currentSpiteTotal'] > 0 else ""
     state['lastDamageMessage'] = f"Rolled a total dice sum of {state['currentDiceSum']} + {effective_adds} adds = {final_total} Total Damage!{spite_msg}"
@@ -268,11 +274,21 @@ def proceed_non_berserk():
         save_state(state)
     return jsonify({'status': 'ok', 'state': state})
 
+@app.route('/api/advance_after_ability', methods=['POST'])
+def advance_after_ability():
+    state = get_state()
+    if state['abilityActivatedThisRound'] and not state['showGreenBannerAfterNext']:
+        state['showGreenBannerAfterNext'] = True
+        save_state(state)
+    return jsonify({'status': 'ok', 'state': state})
+
 @app.route('/api/activate_berserk', methods=['POST'])
 def activate_berserk():
     state = get_state()
     state['spentSpiteThisRound'] = 2
     state['berserkActive'] = True
+    state['abilityActivatedThisRound'] = True
+    state['showGreenBannerAfterNext'] = False
     
     all_sets = []
     for h in state['rollHistory']:
@@ -284,6 +300,7 @@ def activate_berserk():
         state['currentSetInfo'] = next_set
         state['expectedDice'] = next_set['count']
         state['damageResolvedThisRound'] = False
+        state['abilityActivatedThisRound'] = False
         state['activePhase'] = 'damage'
         save_state(state)
 
@@ -294,7 +311,12 @@ def activate_berserk():
             'state': state
         })
 
-    state['activePhase'] = 'str_loss'
+    effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
+    final_total = state['currentDiceSum'] + effective_adds
+    state['finalDamageThisRound'] = final_total
+    spite_msg = f" (Dealt {state['currentSpiteTotal']} direct Spite Damage!)" if state['currentSpiteTotal'] > 0 else ""
+    state['lastDamageMessage'] = f"Rolled a total dice sum of {state['currentDiceSum']} + {effective_adds} adds = {final_total} Total Damage!{spite_msg}"
+
     save_state(state)
     return jsonify({'status': 'activated', 'state': state})
 
@@ -302,6 +324,8 @@ def activate_berserk():
 def toggle_insane_strength():
     state = get_state()
     state['insaneStrengthActive'] = not state['insaneStrengthActive']
+    state['abilityActivatedThisRound'] = state['insaneStrengthActive']
+    state['showGreenBannerAfterNext'] = False
     
     if state['damageResolvedThisRound']:
         effective_adds = state['currentAdds'] + (state['currentStr'] if state['insaneStrengthActive'] else 0)
@@ -401,6 +425,8 @@ def next_round():
         state['insaneStrengthActive'] = False
         state['spentSpiteThisRound'] = 0
         state['damageResolvedThisRound'] = False
+        state['abilityActivatedThisRound'] = False
+        state['showGreenBannerAfterNext'] = False
         state['lastDamageMessage'] = ""
         state['expectedDice'] = state['activeWeaponDice']
         state['currentDiceSum'] = 0
@@ -415,6 +441,8 @@ def next_round():
         state['insaneStrengthActive'] = False
         state['spentSpiteThisRound'] = 0
         state['damageResolvedThisRound'] = False
+        state['abilityActivatedThisRound'] = False
+        state['showGreenBannerAfterNext'] = False
         state['lastDamageMessage'] = ""
         state['expectedDice'] = state['activeWeaponDice']
         state['currentDiceSum'] = 0
