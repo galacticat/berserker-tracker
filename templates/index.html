@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Combat Dashboard</title>
     <!-- Unicorn Favicon via Data URI -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦄</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦄</text></svg>">
     <style>
         :root {
             --bg-color: #1a0b2e;
@@ -17,13 +19,16 @@
             --accent-unicorn: #f15bb5;
             --text-color: #f8edeb;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a0b2e 0%, #3a105c 100%);
             background-attachment: fixed;
             color: var(--text-color);
-            margin: 0; padding: 8px;
-            display: flex; justify-content: center;
+            margin: 0;
+            padding: 8px;
+            display: flex;
+            justify-content: center;
             position: relative;
             overflow-x: hidden;
         }
@@ -42,8 +47,9 @@
             gap: 6px;
             font-size: 0.8em;
             z-index: 10;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
+
         .sparkle-toggle-wrapper input[type="checkbox"] {
             cursor: pointer;
             accent-color: var(--accent-unicorn);
@@ -63,69 +69,107 @@
             z-index: 0;
             pointer-events: none;
         }
+
         @keyframes twinkle {
-            0%, 100% { opacity: 0.2; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.4); }
+
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.4);
+            }
         }
 
         .container {
-            width: 100%; max-width: 950px;
+            width: 100%;
+            max-width: 950px;
             background: var(--card-bg);
-            padding: 12px; border-radius: 12px;
+            padding: 12px;
+            border-radius: 12px;
             box-shadow: 0 8px 32px rgba(155, 93, 229, 0.3);
             border: 1px solid rgba(241, 91, 181, 0.2);
             position: relative;
             z-index: 1;
             margin-top: 35px;
         }
+
         @media (min-width: 768px) {
-            body { padding: 20px; }
-            .container { padding: 25px; margin-top: 10px; }
+            body {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 25px;
+                margin-top: 10px;
+            }
         }
-        h1 { 
-            color: var(--accent-unicorn); 
-            text-align: center; 
-            margin-top: 0; 
-            font-size: 1.3rem; 
+
+        h1 {
+            color: var(--accent-unicorn);
+            text-align: center;
+            margin-top: 0;
+            font-size: 1.3rem;
             text-shadow: 0 2px 15px rgba(241, 91, 181, 0.6);
             animation: headerGlow 3s infinite alternate;
             white-space: nowrap;
         }
+
         @keyframes headerGlow {
-            0% { filter: drop-shadow(0 0 2px rgba(255, 209, 102, 0.4)); }
-            100% { filter: drop-shadow(0 0 10px rgba(241, 91, 181, 0.8)); }
+            0% {
+                filter: drop-shadow(0 0 2px rgba(255, 209, 102, 0.4));
+            }
+
+            100% {
+                filter: drop-shadow(0 0 10px rgba(241, 91, 181, 0.8));
+            }
         }
-        @media (min-width: 768px) { h1 { font-size: 2rem; } }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
         .rule-box {
             background: rgba(241, 91, 181, 0.15);
             border-left: 4px solid var(--accent-unicorn);
-            padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85em;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 0.85em;
         }
-        
+
         /* Stat Banner Grid Layout: Mobile 2-row layout, Desktop 3 equal columns */
         .stat-banner {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            background: #1f0d38; 
-            padding: 10px; 
-            border-radius: 8px; 
+            background: #1f0d38;
+            padding: 10px;
+            border-radius: 8px;
             margin-bottom: 15px;
             border: 1px solid rgba(155, 93, 229, 0.3);
         }
-        .stat-item { 
-            text-align: center; 
-            background: rgba(28, 12, 51, 0.6); 
-            padding: 8px; 
-            border-radius: 6px; 
+
+        .stat-item {
+            text-align: center;
+            background: rgba(28, 12, 51, 0.6);
+            padding: 8px;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
+
         .stat-item.round-item {
             grid-column: span 2;
             padding: 8px;
         }
+
         .stat-item.stat-subitem {
             grid-column: span 1;
         }
@@ -134,77 +178,234 @@
             .stat-banner {
                 grid-template-columns: repeat(3, 1fr);
             }
+
             .stat-item.round-item {
                 grid-column: span 1;
                 padding: 8px;
             }
+
             .stat-item.stat-subitem {
                 grid-column: span 1;
             }
         }
 
-        .stat-val { font-size: 1.2em; font-weight: bold; color: var(--accent-gold); margin: 2px 0; }
-        @media (min-width: 768px) { .stat-val { font-size: 1.6em; margin: 4px 0; } }
-        .buff-controls { display: flex; gap: 3px; margin-top: 4px; justify-content: center; flex-wrap: nowrap; }
-        .buff-btn { padding: 3px 5px; font-size: 0.65em; border-radius: 4px; background: #4a2875; color: #fff; cursor: pointer; border: none; }
-        .buff-btn:hover { background: #6b3ca6; }
+        .stat-val {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--accent-gold);
+            margin: 2px 0;
+        }
+
+        @media (min-width: 768px) {
+            .stat-val {
+                font-size: 1.6em;
+                margin: 4px 0;
+            }
+        }
+
+        .buff-controls {
+            display: flex;
+            gap: 3px;
+            margin-top: 4px;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+
+        .buff-btn {
+            padding: 3px 5px;
+            font-size: 0.65em;
+            border-radius: 4px;
+            background: #4a2875;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+        }
+
+        .buff-btn:hover {
+            background: #6b3ca6;
+        }
+
         .section {
-            background: #200e3a; padding: 14px; border-radius: 8px; margin-bottom: 15px;
+            background: #200e3a;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 15px;
             border: 1px solid rgba(155, 93, 229, 0.2);
         }
-        label { display: block; margin-top: 8px; font-weight: bold; color: #e0aaff; font-size: 0.9em; }
+
+        label {
+            display: block;
+            margin-top: 8px;
+            font-weight: bold;
+            color: #e0aaff;
+            font-size: 0.9em;
+        }
+
         .checkbox-container {
-            display: flex; align-items: center; gap: 10px; margin: 12px 0; background: #18092c; padding: 10px; border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
+            background: #18092c;
+            padding: 10px;
+            border-radius: 6px;
         }
-        .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--accent-unicorn); }
-        input[type="text"], input[type="number"] {
-            background: #140724; border: 1px solid #4a2875; color: #fff;
-            padding: 10px 12px; border-radius: 4px; width: calc(100% - 26px); margin-bottom: 10px; font-size: 1em;
+
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-unicorn);
         }
+
+        input[type="text"],
+        input[type="number"] {
+            background: #140724;
+            border: 1px solid #4a2875;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 4px;
+            width: calc(100% - 26px);
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
         .inline-dice-ctrl {
-            display: flex; align-items: center; gap: 10px; background: #18092c; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #18092c;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
         }
+
         .inline-dice-ctrl input[type="number"] {
-            width: 80px; margin-bottom: 0; font-weight: bold; text-align: center; color: var(--accent-gold);
+            width: 80px;
+            margin-bottom: 0;
+            font-weight: bold;
+            text-align: center;
+            color: var(--accent-gold);
         }
+
         button {
-            background: var(--accent-purple); color: #fff; border: none;
-            padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;
-            transition: 0.2s; margin-right: 5px; margin-top: 5px; font-size: 0.9em;
+            background: var(--accent-purple);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-right: 5px;
+            margin-top: 5px;
+            font-size: 0.9em;
             box-shadow: 0 4px 12px rgba(155, 93, 229, 0.3);
         }
-        button:hover { opacity: 0.85; filter: brightness(1.1); }
-        button:disabled, button.disabled {
+
+        button:hover {
+            opacity: 0.85;
+            filter: brightness(1.1);
+        }
+
+        button:disabled,
+        button.disabled {
             background: #4a3b5c !important;
             color: #8c7d9e !important;
             cursor: not-allowed !important;
             box-shadow: none !important;
             opacity: 0.6;
         }
-        button.alt { background: var(--accent-green); }
-        button.gold { background: var(--accent-gold); color: #1a0b2e; }
-        button.purple { background: var(--accent-unicorn); color: #fff; }
-        button.active-feat { background: #2a9d8f !important; color: #fff; }
-        button.export { background: var(--accent-green); color: #fff; margin-right: 5px; }
-        button.reset { background: #4a2875; color: #fff; margin-left: 0; }
+
+        button.alt {
+            background: var(--accent-green);
+        }
+
+        button.gold {
+            background: var(--accent-gold);
+            color: #1a0b2e;
+        }
+
+        button.purple {
+            background: var(--accent-unicorn);
+            color: #fff;
+        }
+
+        button.active-feat {
+            background: #2a9d8f !important;
+            color: #fff;
+        }
+
+        button.export {
+            background: var(--accent-green);
+            color: #fff;
+            margin-right: 5px;
+        }
+
+        button.reset {
+            background: #4a2875;
+            color: #fff;
+            margin-left: 0;
+        }
+
         .instruction-card {
-            background: #2b124a; border: 2px solid var(--accent-unicorn); color: #ffd1dc;
-            padding: 12px; border-radius: 6px; margin: 10px 0; line-height: 1.4; font-size: 0.95em;
+            background: #2b124a;
+            border: 2px solid var(--accent-unicorn);
+            color: #ffd1dc;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            line-height: 1.4;
+            font-size: 0.95em;
         }
+
         .roll-breakdown {
-            background: #140724; border: 1px dashed #6b3ca6; padding: 10px; border-radius: 6px; margin: 10px 0; font-family: monospace; word-break: break-all; font-size: 0.9em;
+            background: #140724;
+            border: 1px dashed #6b3ca6;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 0.9em;
         }
-        .alert { background: #4a1535; color: #ffb3d9; padding: 10px; border-radius: 6px; margin-top: 10px; }
+
+        .alert {
+            background: #4a1535;
+            color: #ffb3d9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
         .summary-card {
-            background: rgba(42, 157, 143, 0.2); border: 1px solid var(--accent-green);
-            color: #a8ebd9; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.95em;
+            background: rgba(42, 157, 143, 0.2);
+            border: 1px solid var(--accent-green);
+            color: #a8ebd9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
         }
+
         .spite-box {
-            margin-bottom: 12px; background: rgba(241, 91, 181, 0.15); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-unicorn); border-left: 4px solid var(--accent-unicorn);
+            margin-bottom: 12px;
+            background: rgba(241, 91, 181, 0.15);
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--accent-unicorn);
+            border-left: 4px solid var(--accent-unicorn);
         }
+
         .insane-box {
-            margin-bottom: 12px; background: rgba(155, 93, 229, 0.2); padding: 12px 15px; border-radius: 6px; border: 1px solid var(--accent-purple); border-left: 4px solid var(--accent-purple);
+            margin-bottom: 12px;
+            background: rgba(155, 93, 229, 0.2);
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--accent-purple);
+            border-left: 4px solid var(--accent-purple);
         }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -213,51 +414,100 @@
             border-radius: 6px;
             border: 1px solid #4a2875;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85em; white-space: nowrap; }
-        @media (min-width: 768px) { table { font-size: 0.9em; white-space: normal; } }
-        th, td { border: 1px solid #4a2875; padding: 8px 10px; text-align: center; }
-        th { background: #18092c; color: var(--accent-gold); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 768px) {
+            table {
+                font-size: 0.9em;
+                white-space: normal;
+            }
+        }
+
+        th,
+        td {
+            border: 1px solid #4a2875;
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #18092c;
+            color: var(--accent-gold);
+        }
+
         .header-row {
-            display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+            margin-top: 20px;
         }
+
         @media (min-width: 550px) {
-            .header-row { flex-direction: row; justify-content: space-between; align-items: center; }
+            .header-row {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
-        .hidden { display: none !important; }
+
+        .hidden {
+            display: none !important;
+        }
 
         /* Custom Modal Dialog Styles */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(15, 5, 30, 0.8);
-            display: flex; justify-content: center; align-items: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
-            opacity: 0; pointer-events: none;
+            opacity: 0;
+            pointer-events: none;
             transition: opacity 0.2s ease;
         }
+
         .modal-overlay.show {
-            opacity: 1; pointer-events: auto;
+            opacity: 1;
+            pointer-events: auto;
         }
+
         .modal-box {
             background: #281347;
             border: 2px solid var(--accent-unicorn);
-            padding: 20px; border-radius: 10px;
-            width: 90%; max-width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
             box-shadow: 0 10px 30px rgba(241, 91, 181, 0.4);
             text-align: center;
         }
+
         .modal-title {
             color: var(--accent-unicorn);
             font-size: 1.2rem;
             margin-top: 0;
             margin-bottom: 10px;
         }
+
         .modal-message {
             color: var(--text-color);
             font-size: 0.95em;
             margin-bottom: 15px;
             line-height: 1.4;
         }
+
         .modal-dice-group {
             background: #18092c;
             padding: 10px;
@@ -266,11 +516,13 @@
             border: 1px solid #4a2875;
             text-align: left;
         }
+
         .modal-dice-group label {
             margin-top: 0;
             font-size: 0.85em;
             color: var(--accent-gold);
         }
+
         .modal-dice-group input {
             width: calc(100% - 22px);
             margin-bottom: 0;
@@ -279,650 +531,749 @@
             font-weight: bold;
             color: var(--accent-gold);
         }
+
         .modal-buttons {
-            display: flex; justify-content: center; gap: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
     </style>
 </head>
+
 <body>
 
-<!-- Sparkle Toggle Checkbox in Upper Left -->
-<div class="sparkle-toggle-wrapper">
-    <input type="checkbox" id="sparkles-toggle" checked onchange="toggleSparkles()">
-    <label for="sparkles-toggle" style="margin-top:0; cursor:pointer; color:var(--text-color);">✨ Sparkles</label>
-</div>
-
-<!-- Custom Modal Dialog Markup -->
-<div id="custom-modal" class="modal-overlay">
-    <div class="modal-box">
-        <h3 id="modal-title" class="modal-title">🦄 Notice</h3>
-        <p id="modal-message" class="modal-message">Message goes here...</p>
-        
-        <div id="modal-dice-container" class="modal-dice-group hidden">
-            <label for="modal-dice-input">🎲 Update Dice Pool (Active Weapon Dice):</label>
-            <input type="number" id="modal-dice-input" min="1" value="{{ state.activeWeaponDice }}">
-        </div>
-
-        <div id="modal-buttons" class="modal-buttons">
-            <button type="button" id="modal-ok-btn" onclick="closeModal(true)">OK</button>
-            <button type="button" id="modal-cancel-btn" class="alt hidden" onclick="closeModal(false)">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-    <h1>🦄 Jazzy Combat Dashboard 🦄</h1>
-    <div class="rule-box">
-        <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over separately. 1s deal Spite Damage directly! Pay 2 Spite once to enter Berserk. You lose 1d6 STR per round, which lowers combat adds and reduces dice if below weapon min STR.
+    <!-- Sparkle Toggle Checkbox in Upper Left -->
+    <div class="sparkle-toggle-wrapper">
+        <input type="checkbox" id="sparkles-toggle" checked onchange="toggleSparkles()">
+        <label for="sparkles-toggle" style="margin-top:0; cursor:pointer; color:var(--text-color);">✨ Sparkles</label>
     </div>
 
-    <!-- SETUP FORM -->
-    <div id="setup-section" class="section {% if state.inCombat %}hidden{% endif %}">
-        <h3>Character & Weapon Setup</h3>
-        <label>Starting / Max Strength (STR):</label>
-        <input type="number" id="max-str" value="{{ state.maxStr }}" min="1" onchange="saveSetupDefaults()">
-        
-        <label>Weapon Damage Dice Pool (e.g. 8 for 8d6 weapon):</label>
-        <input type="number" id="base-weapon-dice" value="{{ state.baseWeaponDice }}" min="1" onchange="saveSetupDefaults()">
+    <!-- Custom Modal Dialog Markup -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modal-title" class="modal-title">🦄 Notice</h3>
+            <p id="modal-message" class="modal-message">Message goes here...</p>
 
-        <label>Weapon Minimum STR Requirement:</label>
-        <input type="number" id="min-str-req" value="{{ state.minStrReq }}" min="1" onchange="saveSetupDefaults()">
+            <div id="modal-dice-container" class="modal-dice-group hidden">
+                <label for="modal-dice-input">🎲 Update Dice Pool (Active Weapon Dice):</label>
+                <input type="number" id="modal-dice-input" min="1" value="{{ state.activeWeaponDice }}">
+            </div>
 
-        <label>Current Combat Adds (Bonus Damage):</label>
-        <input type="number" id="initial-adds" value="{{ state.currentAdds }}" min="0" onchange="saveSetupDefaults()">
-
-        <div class="checkbox-container">
-            <input type="checkbox" id="already-berserk" {% if state.berserkActive %}checked{% endif %} onchange="saveSetupDefaults()">
-            <div>
-                <strong>Already Berserking at Start of Encounter?</strong>
-                <div style="font-size:0.85em; color:#d8b4fe;">Uncheck if you need to pay 2 Spite on your first roll to enter Berserk mode.</div>
+            <div id="modal-buttons" class="modal-buttons">
+                <button type="button" id="modal-ok-btn" onclick="closeModal(true)">OK</button>
+                <button type="button" id="modal-cancel-btn" class="alt hidden"
+                    onclick="closeModal(false)">Cancel</button>
             </div>
         </div>
-
-        <div class="checkbox-container">
-            <input type="checkbox" id="has-insane-strength" {% if state.hasInsaneStrengthFeat %}checked{% endif %} onchange="saveSetupDefaults()">
-            <div>
-                <strong>Character Feat: 3/ Insane Strength</strong>
-                <div style="font-size:0.85em; color:#d8b4fe;">Triggered on 3 Available Spite: "Your STR doubles for the current combat round! Refigure your combat adds."</div>
-            </div>
-        </div>
-
-        <button type="button" onclick="startCombat()">Begin Combat</button>
     </div>
 
-    <!-- MAIN DASHBOARD -->
-    <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
-        <div class="stat-banner">
-            <!-- ROUND -->
-            <div class="stat-item round-item">
-                <div style="font-size: 0.85em;">Round</div>
-                <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
-                <div class="buff-controls" style="visibility: hidden; pointer-events: none;">
-                    <button type="button" class="buff-btn">+5</button>
-                </div>
-            </div>
-            <!-- STR BANNER ITEM -->
-            <div class="stat-item stat-subitem">
-                <div>Strength (STR)</div>
-                <div class="stat-val" id="disp-str">
-                    {% if state.insaneStrengthActive %}
-                        {{ state.currentStr * 2 }} ({{ state.currentStr }}x2)
-                    {% else %}
-                        {{ state.currentStr }} / {{ state.maxStr }}
-                    {% endif %}
-                </div>
-                <div class="buff-controls">
-                    <button type="button" class="buff-btn" onclick="adjustStr(5)" title="Buff +5 STR">+5</button>
-                    <button type="button" class="buff-btn" onclick="adjustStr(1)" title="Buff +1 STR">+1</button>
-                    <button type="button" class="buff-btn" onclick="adjustStr(-1)" title="Debuff -1 STR">-1</button>
-                    <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
-                </div>
-            </div>
-            <!-- ADDS BANNER ITEM -->
-            <div class="stat-item stat-subitem">
-                <div>Active Adds</div>
-                <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if state.insaneStrengthActive else 0) }}</div>
-                <div class="buff-controls">
-                    <button type="button" class="buff-btn" onclick="adjustAdds(5)" title="Buff +5 Adds">+5</button>
-                    <button type="button" class="buff-btn" onclick="adjustAdds(1)" title="Buff +1 Adds">+1</button>
-                    <button type="button" class="buff-btn" onclick="adjustAdds(-1)" title="Debuff -1 Adds">-1</button>
-                    <button type="button" class="buff-btn" onclick="adjustAdds(-5)" title="Debuff -5 Adds">-5</button>
-                </div>
-            </div>
+    <div class="container">
+        <h1>🦄 Jazzy Combat Dashboard 🦄</h1>
+        <div class="rule-box">
+            <strong>⚠️ Berserker Rules:</strong> Doubles & triples add and roll over! Each matching set is rolled over
+            separately. 1s deal Spite Damage directly! Pay 2 Spite once to enter Berserk. You lose 1d6 STR per round,
+            which lowers combat adds and reduces dice if below weapon min STR.
         </div>
 
-        <!-- DAMAGE PHASE -->
-        <div id="damage-panel" class="section {% if state.activePhase != 'damage' %}hidden{% endif %}">
-            <h3 id="damage-title">
-                {% if state.currentSetInfo %}
-                    🦄 BERSERK EXPLOSION DETECTED!
-                {% else %}
-                    Step 1: Roll Weapon Damage
-                {% endif %}
-            </h3>
-            
-            <div id="action-box" class="instruction-card {% if state.damageResolvedThisRound %}hidden{% endif %}">
-                <strong>📋 WHAT TO DO NOW:</strong>
-                <div id="action-text">
-                    {% if state.currentSetInfo %}
-                        Roll <strong>{{ state.expectedDice }} additional d6</strong> for your set of {{ state.currentSetInfo.val }}s!
-                    {% else %}
-                        Roll your <strong id="instruction-dice-count">{{ state.expectedDice }}</strong> weapon dice and enter the values separated by spaces.
-                    {% endif %}
+        <!-- SETUP FORM -->
+        <div id="setup-section" class="section {% if state.inCombat %}hidden{% endif %}">
+            <h3>Character & Weapon Setup</h3>
+            <label>Starting / Max Strength (STR):</label>
+            <input type="number" id="max-str" value="{{ state.maxStr }}" min="1" onchange="saveSetupDefaults()">
+
+            <label>Weapon Damage Dice Pool (e.g. 8 for 8d6 weapon):</label>
+            <input type="number" id="base-weapon-dice" value="{{ state.baseWeaponDice }}" min="1"
+                onchange="saveSetupDefaults()">
+
+            <label>Weapon Minimum STR Requirement:</label>
+            <input type="number" id="min-str-req" value="{{ state.minStrReq }}" min="1" onchange="saveSetupDefaults()">
+
+            <label>Current Combat Adds (Bonus Damage):</label>
+            <input type="number" id="initial-adds" value="{{ state.currentAdds }}" min="0"
+                onchange="saveSetupDefaults()">
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="already-berserk" {% if state.berserkActive %}checked{% endif %}
+                    onchange="saveSetupDefaults()">
+                <div>
+                    <strong>Already Berserking at Start of Encounter?</strong>
+                    <div style="font-size:0.85em; color:#d8b4fe;">Uncheck if you need to pay 2 Spite on your first roll
+                        to enter Berserk mode.</div>
                 </div>
             </div>
 
-            {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
-            {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
-            {% set has_spite_options = (available_spite >= 2) or (state.hasInsaneStrengthFeat and available_spite >= 3) %}
-            
-            <!-- Strict visibility conditions -->
-            {% set show_normal_green_banner = state.damageResolvedThisRound and (not has_spite_options or state.berserkActive) %}
-            {% set show_spite_options_banner = state.damageResolvedThisRound and has_spite_options and not state.berserkActive and not state.abilityActivatedThisRound %}
-            {% set show_next_button_after_ability = state.damageResolvedThisRound and state.abilityActivatedThisRound and state.showGreenBannerAfterNext %}
-
-            <!-- 1. NORMAL GREEN DAMAGE RESULT & PROCEED BANNER -->
-            <div id="non-berserk-proceed-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not show_normal_green_banner and not show_next_button_after_ability %}hidden{% endif %}">
-                <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 10px;">
-                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> <span id="damage-msg-span">{{ state.lastDamageMessage }}</span>
+            <div class="checkbox-container">
+                <input type="checkbox" id="has-insane-strength" {% if state.hasInsaneStrengthFeat %}checked{% endif %}
+                    onchange="saveSetupDefaults()">
+                <div>
+                    <strong>Character Feat: 3/ Insane Strength</strong>
+                    <div style="font-size:0.85em; color:#d8b4fe;">Triggered on 3 Available Spite: "Your STR doubles for
+                        the current combat round! Refigure your combat adds."</div>
                 </div>
-                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
             </div>
 
-            {% if not state.currentSetInfo %}
-            <div id="dice-adjust-box" class="inline-dice-ctrl">
-                <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool:</label>
-                <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1" oninput="updateAutoRollButtonText(); validateDiceInputUI();" onchange="saveDicePool()">
-                <span style="font-size:0.8em; color:#d8b4fe;">(Adjust anytime)</span>
-            </div>
-            {% endif %}
+            <button type="button" onclick="startCombat()">Begin Combat</button>
+        </div>
 
-            <!-- SPITE BERSERK ACTIVATION -->
-            <div id="spend-spite-box" class="spite-box {% if state.berserkActive or state.spentSpiteThisRound > 0 or available_spite < 2 %}hidden{% endif %}">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <strong style="color: var(--accent-gold);">🦄 BERSERK ACTIVATION AVAILABLE!</strong>
-                        <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 2+ available Spite. Spend 2 Spite to enter Berserk mode for this entire combat.</div>
+        <!-- MAIN DASHBOARD -->
+        <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
+            <div class="stat-banner">
+                <!-- ROUND -->
+                <div class="stat-item round-item">
+                    <div style="font-size: 0.85em;">Round</div>
+                    <div class="stat-val" id="disp-round">{{ state.roundNum }}</div>
+                    <div class="buff-controls" style="visibility: hidden; pointer-events: none;">
+                        <button type="button" class="buff-btn">+5</button>
                     </div>
-                    <button type="button" class="gold" onclick="spendSpiteForBerserk()" style="margin-top: 0;">Activate Berserk (2 spite)</button>
                 </div>
-            </div>
-
-            <!-- INSANE STRENGTH OPTION (Disabled if remaining spite after activating Berserk is < 3) -->
-            {% set remaining_after_berserk = [0, available_spite - (0 if state.berserkActive else 2)]|max %}
-            {% set can_afford_insane = state.hasInsaneStrengthFeat and (state.insaneStrengthActive or remaining_after_berserk >= 3) %}
-            <div id="insane-strength-box" class="insane-box {% if not state.hasInsaneStrengthFeat or (not state.insaneStrengthActive and available_spite < 3) %}hidden{% endif %}">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
-                        <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 3+ available Spite. Spend 3 Spite to double your STR for this round.</div>
-                    </div>
-                    <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %} {% if not can_afford_insane and not state.insaneStrengthActive %}disabled{% endif %}" id="insane-btn" {% if not can_afford_insane and not state.insaneStrengthActive %}disabled title="Not enough spite left over!"{% else %}onclick="toggleInsaneStrength()"{% endif %} style="margin-top: 0;">
+                <!-- STR BANNER ITEM -->
+                <div class="stat-item stat-subitem">
+                    <div>Strength (STR)</div>
+                    <div class="stat-val" id="disp-str">
                         {% if state.insaneStrengthActive %}
-                            🦄 Insane Strength ACTIVE (STR Doubled)
+                        {{ state.currentStr * 2 }} ({{ state.currentStr }}x2)
                         {% else %}
-                            Activate Insane Strength (3 spite)
+                        {{ state.currentStr }} / {{ state.maxStr }}
                         {% endif %}
-                    </button>
+                    </div>
+                    <div class="buff-controls">
+                        <button type="button" class="buff-btn" onclick="adjustStr(5)" title="Buff +5 STR">+5</button>
+                        <button type="button" class="buff-btn" onclick="adjustStr(1)" title="Buff +1 STR">+1</button>
+                        <button type="button" class="buff-btn" onclick="adjustStr(-1)" title="Debuff -1 STR">-1</button>
+                        <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
+                    </div>
+                </div>
+                <!-- ADDS BANNER ITEM -->
+                <div class="stat-item stat-subitem">
+                    <div>Active Adds</div>
+                    <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if
+                        state.insaneStrengthActive else 0) }}</div>
+                    <div class="buff-controls">
+                        <button type="button" class="buff-btn" onclick="adjustAdds(5)" title="Buff +5 Adds">+5</button>
+                        <button type="button" class="buff-btn" onclick="adjustAdds(1)" title="Buff +1 Adds">+1</button>
+                        <button type="button" class="buff-btn" onclick="adjustAdds(-1)"
+                            title="Debuff -1 Adds">-1</button>
+                        <button type="button" class="buff-btn" onclick="adjustAdds(-5)"
+                            title="Debuff -5 Adds">-5</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 2. SPITE OPTIONS AVAILABLE BUT NOT YET SELECTED (FORFEIT / PROCEED BUTTON) -->
-            <div id="forfeit-spite-proceed-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not show_spite_options_banner %}hidden{% endif %}">
-                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round (Forfeit Spite Options)</button>
+            <!-- STEP 1: DAMAGE PHASE -->
+            <div id="damage-panel" class="section {% if state.activePhase != 'damage' %}hidden{% endif %}">
+                <h3 id="damage-title">
+                    {% if state.currentSetInfo %}
+                    🦄 BERSERK EXPLOSION DETECTED!
+                    {% else %}
+                    Step 1: Roll Weapon Damage
+                    {% endif %}
+                </h3>
+
+                {% if not state.damageResolvedThisRound or state.currentSetInfo %}
+                <div id="action-box" class="instruction-card">
+                    <strong>📋 WHAT TO DO NOW:</strong>
+                    <div id="action-text">
+                        {% if state.currentSetInfo %}
+                        Roll <strong id="instruction-dice-count">{{ state.expectedDice }}</strong> additional d6 for
+                        your set of {{ state.currentSetInfo.val }}s!
+                        {% else %}
+                        Roll your <strong id="instruction-dice-count">{{ state.expectedDice }}</strong> weapon dice and
+                        enter the values separated by spaces.
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if not state.currentSetInfo %}
+                <div id="dice-adjust-box" class="inline-dice-ctrl">
+                    <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool:</label>
+                    <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1"
+                        oninput="updateAutoRollButtonText(); validateDiceInputUI();" onchange="saveDicePool()">
+                    <span style="font-size:0.8em; color:#d8b4fe;">(Adjust anytime)</span>
+                </div>
+                {% endif %}
+
+                {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
+                {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
+                {% set can_afford_berserk = (state.rollHistory|length <= 1) and ((state.berserkActive and
+                    state.spentSpiteThisRound==2) or (not state.berserkActive and (state.currentSpiteTotal - (3 if
+                    state.insaneStrengthActive else 0))>= 2)) %}
+                    {% set unspent_spite_for_insane = state.currentSpiteTotal - state.spentSpiteThisRound %}
+                    {% set can_afford_insane = state.hasInsaneStrengthFeat and (state.insaneStrengthActive or
+                    unspent_spite_for_insane >= 3) %}
+
+                    <!-- SPITE OPTIONS (ONLY AVAILABLE IN STEP 1 BEFORE CLICKING NEXT) -->
+                    {% if state.damageResolvedThisRound and not state.currentSetInfo %}
+                    <!-- BERSERK OPTION -->
+                    {% if can_afford_berserk %}
+                    <div id="spend-spite-box" class="spite-box">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <strong style="color: var(--accent-gold);">🦄 BERSERK ACTIVATION AVAILABLE!</strong>
+                                <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 2+ available
+                                    Spite. Spend 2 Spite to enter Berserk mode for this entire combat.</div>
+                            </div>
+                            <button type="button"
+                                class="{% if state.berserkActive %}active-feat alt{% else %}gold{% endif %}"
+                                onclick="spendSpiteForBerserk()" style="margin-top: 0;">
+                                {% if state.berserkActive %}
+                                🦄 Berserk ACTIVE (Click to Back Out)
+                                {% else %}
+                                Activate Berserk (2 spite)
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- INSANE STRENGTH OPTION -->
+                    {% if can_afford_insane %}
+                    <div id="insane-strength-box" class="insane-box">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
+                                <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 3+ available
+                                    Spite. Spend 3 Spite to double your STR for this round.</div>
+                            </div>
+                            <button type="button"
+                                class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn"
+                                onclick="toggleInsaneStrength()" style="margin-top: 0;">
+                                {% if state.insaneStrengthActive %}
+                                🦄 Insane Strength ACTIVE (STR Doubled)
+                                {% else %}
+                                Activate Insane Strength (3 spite)
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- YELLOW NEXT BUTTON AFTER SELECTING/HAVING AN ABILITY -->
+                    <div id="ability-next-box" style="margin-top: 15px; margin-bottom: 15px;">
+                        <button type="button" class="gold" onclick="advanceAfterAbility()">Next</button>
+                    </div>
+                    {% endif %}
+
+                    <div id="breakdown-box"
+                        class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
+                        <strong>🎲 Current Round Rolls:</strong>
+                        <div id="breakdown-text">
+                            {% for h in state.rollHistory %}
+                            <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }}
+                                <span style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }}
+                                    Spite)</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if not state.damageResolvedThisRound or state.currentSetInfo %}
+                    <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4"
+                        oninput="validateDiceInputUI()">
+                    <div>
+                        <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit {% if
+                            state.currentSetInfo %}Rollover{% else %}Manual{% endif %} Roll</button>
+                        <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{
+                            state.expectedDice }}d6</button>
+                    </div>
+                    {% endif %}
+
+                    <div id="damage-alert" class="alert hidden"></div>
             </div>
 
-            <!-- 3. 'NEXT' BUTTON AFTER SELECTING AN ABILITY -->
-            <div id="ability-next-box" style="margin-top: 15px; margin-bottom: 15px;" class="{% if not state.damageResolvedThisRound or not state.abilityActivatedThisRound or state.showGreenBannerAfterNext %}hidden{% endif %}">
-                <button type="button" class="gold" onclick="advanceAfterAbility()">Next</button>
-            </div>
+            <!-- STEP 2: STR LOSS PHASE (ONLY BERSERK) -->
+            <div id="str-panel" class="section {% if state.activePhase != 'str_loss' %}hidden{% endif %}">
+                <h3>Step 2: Berserk Exhaustion (STR & Adds Reduction)</h3>
 
-            <div id="breakdown-box" class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
-                <strong>🎲 Current Round Rolls:</strong>
-                <div id="breakdown-text">
-                    {% for h in state.rollHistory %}
-                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span></div>
-                    {% endfor %}
+                <div class="instruction-card">
+                    <strong>📋 WHAT TO DO NOW:</strong>
+                    <div>Roll 1d6 to determine your STR reduction for this round. Your combat adds will decrease by this
+                        exact amount next round!</div>
+                </div>
+
+                <div class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
+                    <strong>🎲 Current Round Rolls:</strong>
+                    <div>
+                        {% for h in state.rollHistory %}
+                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
+                                style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <input type="number" id="str-loss-input" placeholder="e.g. 4" min="1" max="6">
+                <div>
+                    <button type="button" onclick="submitStrLoss(false)">Submit 1d6 Loss</button>
+                    <button type="button" class="alt" onclick="submitStrLoss(true)">Auto-Roll 1d6 Loss</button>
                 </div>
             </div>
 
-            {% if not state.damageResolvedThisRound %}
-            <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4" oninput="validateDiceInputUI()">
-            <div>
-                <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit Manual Roll</button>
-                <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{ state.expectedDice }}d6</button>
+            <!-- STEP 3: FINAL ROUND RESULTS -->
+            <div id="results-panel" class="section {% if state.activePhase != 'results' %}hidden{% endif %}">
+                <h3>Step 3: Final Damage Results</h3>
+
+                <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 15px;">
+                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
+                </div>
+
+                <div class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
+                    <strong>🎲 Current Round Rolls:</strong>
+                    <div>
+                        {% for h in state.rollHistory %}
+                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
+                                style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if state.berserkActive %}
+                <div class="instruction-card" style="border-color: var(--accent-gold);">
+                    <strong>🧠 ATTEMPT TO CALM DOWN:</strong>
+                    <div>Roll an <strong>IQ Saving Roll</strong> (or use a helping stunt) to stop Berserking!</div>
+                </div>
+                <div>
+                    <button type="button" class="alt" onclick="nextRound(false, false)">Continue Berserking Next
+                        Round</button>
+                    <button type="button" class="gold" onclick="attemptStopBerserk()">Stop Berserking</button>
+                </div>
+                {% else %}
+                <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
+                {% endif %}
             </div>
-            {% endif %}
 
-            <div id="damage-alert" class="alert hidden"></div>
-        </div>
-
-        <!-- STR LOSS PHASE -->
-        <div id="str-panel" class="section {% if state.activePhase != 'str_loss' %}hidden{% endif %}">
-            <h3>Step 2: Berserk Exhaustion (STR & Adds Reduction)</h3>
-            
-            <div class="summary-card">
-                <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
+            <!-- SUMMARY PANEL -->
+            <div id="summary-panel" class="section {% if state.activePhase != 'summary' %}hidden{% endif %}">
+                <h3 style="color:var(--accent-gold);">Combat Finished</h3>
+                <p id="summary-msg" class="instruction-card"
+                    style="font-size: 1.05em; background: rgba(74, 21, 53, 0.4); border-color: var(--accent-unicorn);">
+                    {{ state.summaryMsg if state.summaryMsg else '' }}
+                </p>
+                <button type="button" onclick="clearCombatStorage()">Start New Combat</button>
             </div>
 
-            <div class="instruction-card">
-                <strong>📋 WHAT TO DO NOW:</strong>
-                <div>Roll 1d6 to determine your STR reduction for this round. Your combat adds will decrease by this exact amount next round!</div>
+            <!-- LOG TABLE -->
+            <div class="header-row">
+                <h3>📜 Combat Log & Adds Tracking</h3>
+                <div>
+                    <button type="button" class="export" onclick="exportCSV()">📥 Export CSV</button>
+                    <button type="button" class="reset" onclick="confirmReset()">🗑️ Reset Encounter Log</button>
+                </div>
             </div>
-            <input type="number" id="str-loss-input" placeholder="e.g. 4" min="1" max="6">
-            <div>
-                <button type="button" onclick="submitStrLoss(false)">Submit 1d6 Loss</button>
-                <button type="button" class="alt" onclick="submitStrLoss(true)">Auto-Roll 1d6 Loss</button>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Dice Breakdown</th>
+                            <th>Dice Total</th>
+                            <th>Spite (1s)</th>
+                            <th>Adds</th>
+                            <th>Total Damage Dealt</th>
+                            <th>STR Lost</th>
+                            <th>STR Left</th>
+                            <th>Adds Next Round</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        {% for row in state.historyLog|reverse %}
+                        <tr>
+                            <td>{{ row.round }}</td>
+                            <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
+                            <td>{{ row.dice_sum }}</td>
+                            <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
+                            <td>{{ row.adds }}</td>
+                            <td style="font-weight:bold; color:var(--accent-gold);">🦄 {{ row.total_damage }}</td>
+                            <td>-{{ row.str_lost }}</td>
+                            <td>{{ row.str_remaining }}</td>
+                            <td>{{ row.adds_next }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
-
-        <!-- END ROUND / CALM DOWN PHASE -->
-        <div id="round-end-panel" class="section {% if state.activePhase != 'round_end' %}hidden{% endif %}">
-            <h3>Step 3: End of Round Options</h3>
-            <p>Did you make an IQ Saving Roll or did someone use a helping stunt to calm you down?</p>
-            <button type="button" class="gold" onclick="nextRound(true)">Yes, Stop Berserking</button>
-            <button type="button" onclick="nextRound(false)">No, Continue Berserking Next Round</button>
-        </div>
-
-        <!-- SUMMARY PANEL -->
-        <div id="summary-panel" class="section {% if state.activePhase != 'summary' %}hidden{% endif %}">
-            <h3 style="color:var(--accent-gold);">Combat Finished</h3>
-            <p id="summary-msg" class="instruction-card" style="font-size: 1.05em; background: rgba(74, 21, 53, 0.4); border-color: var(--accent-unicorn);">
-                {{ state.summaryMsg if state.summaryMsg else '' }}
-            </p>
-            <button type="button" onclick="clearCombatStorage()">Start New Combat</button>
-        </div>
-
-        <!-- LOG TABLE -->
-        <div class="header-row">
-            <h3>📜 Combat Log & Adds Tracking</h3>
-            <div>
-                <button type="button" class="export" onclick="exportCSV()">📥 Export CSV</button>
-                <button type="button" class="reset" onclick="confirmReset()">🗑️ Reset Encounter Log</button>
-            </div>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Round</th>
-                        <th>Dice Breakdown</th>
-                        <th>Dice Total</th>
-                        <th>Spite (1s)</th>
-                        <th>Adds</th>
-                        <th>Total Damage Dealt</th>
-                        <th>STR Lost</th>
-                        <th>STR Left</th>
-                        <th>Adds Next Round</th>
-                    </tr>
-                </thead>
-                <tbody id="history-table-body">
-                    {% for row in state.historyLog|reverse %}
-                    <tr>
-                        <td>{{ row.round }}</td>
-                        <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
-                        <td>{{ row.dice_sum }}</td>
-                        <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
-                        <td>{{ row.adds }}</td>
-                        <td style="font-weight:bold; color:var(--accent-gold);">🦄 {{ row.total_damage }}</td>
-                        <td>-{{ row.str_lost }}</td>
-                        <td>{{ row.str_remaining }}</td>
-                        <td>{{ row.adds_next }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
     </div>
-</div>
 
-<script>
-    const SETUP_DEFAULTS_KEY = 'mm_berserker_setup_defaults';
+    <script>
+        const SETUP_DEFAULTS_KEY = 'mm_berserker_setup_defaults';
 
-    let modalCallback = null;
+        let modalCallback = null;
 
-    function showModal(title, message, isConfirm = false, showDiceInput = false, currentDice = 8, callback = null) {
-        const modal = document.getElementById('custom-modal');
-        const titleEl = document.getElementById('modal-title');
-        const msgEl = document.getElementById('modal-message');
-        const diceContainer = document.getElementById('modal-dice-container');
-        const diceInput = document.getElementById('modal-dice-input');
-        const okBtn = document.getElementById('modal-ok-btn');
-        const cancelBtn = document.getElementById('modal-cancel-btn');
+        function showModal(title, message, isConfirm = false, showDiceInput = false, currentDice = 8, callback = null) {
+            const modal = document.getElementById('custom-modal');
+            const titleEl = document.getElementById('modal-title');
+            const msgEl = document.getElementById('modal-message');
+            const diceContainer = document.getElementById('modal-dice-container');
+            const diceInput = document.getElementById('modal-dice-input');
+            const okBtn = document.getElementById('modal-ok-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
 
-        titleEl.innerText = title;
-        msgEl.innerText = message;
-        modalCallback = callback;
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            modalCallback = callback;
 
-        if (showDiceInput) {
-            diceContainer.classList.remove('hidden');
-            diceInput.value = currentDice;
-        } else {
-            diceContainer.classList.add('hidden');
+            if (showDiceInput) {
+                diceContainer.classList.remove('hidden');
+                diceInput.value = currentDice;
+            } else {
+                diceContainer.classList.add('hidden');
+            }
+
+            if (isConfirm) {
+                cancelBtn.classList.remove('hidden');
+                okBtn.innerText = 'Confirm';
+            } else {
+                cancelBtn.classList.add('hidden');
+                okBtn.innerText = 'OK';
+            }
+
+            modal.classList.add('show');
         }
 
-        if (isConfirm) {
-            cancelBtn.classList.remove('hidden');
-            okBtn.innerText = 'Confirm';
-        } else {
-            cancelBtn.classList.add('hidden');
-            okBtn.innerText = 'OK';
-        }
+        async function closeModal(result) {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.remove('show');
 
-        modal.classList.add('show');
-    }
+            const diceContainer = document.getElementById('modal-dice-container');
+            if (!diceContainer.classList.contains('hidden') && result) {
+                const newDiceVal = parseInt(document.getElementById('modal-dice-input').value, 10);
+                if (!isNaN(newDiceVal) && newDiceVal >= 1) {
+                    await fetch('/api/update_dice_pool', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ dice_pool: newDiceVal })
+                    });
+                }
+            }
 
-    async function closeModal(result) {
-        const modal = document.getElementById('custom-modal');
-        modal.classList.remove('show');
-
-        const diceContainer = document.getElementById('modal-dice-container');
-        if (!diceContainer.classList.contains('hidden') && result) {
-            const newDiceVal = parseInt(document.getElementById('modal-dice-input').value, 10);
-            if (!isNaN(newDiceVal) && newDiceVal >= 1) {
-                await fetch('/api/update_dice_pool', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ dice_pool: newDiceVal })
-                });
+            if (modalCallback) {
+                modalCallback(result);
+                modalCallback = null;
             }
         }
 
-        if (modalCallback) {
-            modalCallback(result);
-            modalCallback = null;
+        function initSparkles() {
+            const storedPref = sessionStorage.getItem('mm_sparkles_enabled');
+            const isEnabled = storedPref === null ? true : (storedPref === 'true');
+
+            const toggleEl = document.getElementById('sparkles-toggle');
+            if (toggleEl) toggleEl.checked = isEnabled;
+
+            if (isEnabled) {
+                createSparkles();
+            }
         }
-    }
 
-    function initSparkles() {
-        const storedPref = sessionStorage.getItem('mm_sparkles_enabled');
-        const isEnabled = storedPref === null ? true : (storedPref === 'true');
-        
-        const toggleEl = document.getElementById('sparkles-toggle');
-        if (toggleEl) toggleEl.checked = isEnabled;
-
-        if (isEnabled) {
-            createSparkles();
+        function createSparkles() {
+            if (document.querySelectorAll('.sparkle').length > 0) return;
+            const sparkleCount = 25;
+            for (let i = 0; i < sparkleCount; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                sparkle.style.top = Math.random() * 100 + 'vh';
+                sparkle.style.left = Math.random() * 100 + 'vw';
+                sparkle.style.setProperty('--duration', (2 + Math.random() * 3) + 's');
+                sparkle.style.animationDelay = (Math.random() * 3) + 's';
+                document.body.appendChild(sparkle);
+            }
         }
-    }
 
-    function createSparkles() {
-        if (document.querySelectorAll('.sparkle').length > 0) return;
-        const sparkleCount = 25;
-        for (let i = 0; i < sparkleCount; i++) {
-            const sparkle = document.createElement('div');
-            sparkle.classList.add('sparkle');
-            sparkle.style.top = Math.random() * 100 + 'vh';
-            sparkle.style.left = Math.random() * 100 + 'vw';
-            sparkle.style.setProperty('--duration', (2 + Math.random() * 3) + 's');
-            sparkle.style.animationDelay = (Math.random() * 3) + 's';
-            document.body.appendChild(sparkle);
+        function removeSparkles() {
+            document.querySelectorAll('.sparkle').forEach(el => el.remove());
         }
-    }
 
-    function removeSparkles() {
-        document.querySelectorAll('.sparkle').forEach(el => el.remove());
-    }
-
-    function toggleSparkles() {
-        const toggleEl = document.getElementById('sparkles-toggle');
-        const isEnabled = toggleEl.checked;
-        sessionStorage.setItem('mm_sparkles_enabled', isEnabled);
-        if (isEnabled) {
-            createSparkles();
-        } else {
-            removeSparkles();
+        function toggleSparkles() {
+            const toggleEl = document.getElementById('sparkles-toggle');
+            const isEnabled = toggleEl.checked;
+            sessionStorage.setItem('mm_sparkles_enabled', isEnabled);
+            if (isEnabled) {
+                createSparkles();
+            } else {
+                removeSparkles();
+            }
         }
-    }
 
-    function loadSetupDefaults() {
-        const saved = localStorage.getItem(SETUP_DEFAULTS_KEY);
-        if (!saved) return;
-        try {
-            const defaults = JSON.parse(saved);
-            if (defaults.maxStr) document.getElementById('max-str').value = defaults.maxStr;
-            if (defaults.baseWeaponDice) document.getElementById('base-weapon-dice').value = defaults.baseWeaponDice;
-            if (defaults.minStrReq) document.getElementById('min-str-req').value = defaults.minStrReq;
-            if (defaults.initialAdds) document.getElementById('initial-adds').value = defaults.initialAdds;
-            if (defaults.alreadyBerserk !== undefined) document.getElementById('already-berserk').checked = defaults.alreadyBerserk;
-            if (defaults.hasInsaneStrength !== undefined) document.getElementById('has-insane-strength').checked = defaults.hasInsaneStrength;
-        } catch (e) {
-            console.error("Failed to load setup defaults", e);
+        function loadSetupDefaults() {
+            const saved = localStorage.getItem(SETUP_DEFAULTS_KEY);
+            if (!saved) return;
+            try {
+                const defaults = JSON.parse(saved);
+                if (defaults.maxStr) document.getElementById('max-str').value = defaults.maxStr;
+                if (defaults.baseWeaponDice) document.getElementById('base-weapon-dice').value = defaults.baseWeaponDice;
+                if (defaults.minStrReq) document.getElementById('min-str-req').value = defaults.minStrReq;
+                if (defaults.initialAdds) document.getElementById('initial-adds').value = defaults.initialAdds;
+                if (defaults.alreadyBerserk !== undefined) document.getElementById('already-berserk').checked = defaults.alreadyBerserk;
+                if (defaults.hasInsaneStrength !== undefined) document.getElementById('has-insane-strength').checked = defaults.hasInsaneStrength;
+            } catch (e) {
+                console.error("Failed to load setup defaults", e);
+            }
         }
-    }
 
-    function saveSetupDefaults() {
-        const defaults = {
-            maxStr: document.getElementById('max-str').value,
-            baseWeaponDice: document.getElementById('base-weapon-dice').value,
-            minStrReq: document.getElementById('min-str-req').value,
-            initialAdds: document.getElementById('initial-adds').value,
-            alreadyBerserk: document.getElementById('already-berserk').checked,
-            hasInsaneStrength: document.getElementById('has-insane-strength').checked
-        };
-        localStorage.setItem(SETUP_DEFAULTS_KEY, JSON.stringify(defaults));
-    }
-
-    function updateAutoRollButtonText() {
-        const diceCtrl = document.getElementById('current-dice-pool-input');
-        const autoBtn = document.getElementById('auto-roll-btn');
-        const countSpan = document.getElementById('instruction-dice-count');
-        if (diceCtrl && autoBtn) {
-            const val = diceCtrl.value || '0';
-            autoBtn.innerText = `Auto-Roll ${val}d6`;
-            if (countSpan) countSpan.innerText = val;
+        function saveSetupDefaults() {
+            const defaults = {
+                maxStr: document.getElementById('max-str').value,
+                baseWeaponDice: document.getElementById('base-weapon-dice').value,
+                minStrReq: document.getElementById('min-str-req').value,
+                initialAdds: document.getElementById('initial-adds').value,
+                alreadyBerserk: document.getElementById('already-berserk').checked,
+                hasInsaneStrength: document.getElementById('has-insane-strength').checked
+            };
+            localStorage.setItem(SETUP_DEFAULTS_KEY, JSON.stringify(defaults));
         }
-    }
 
-    async function saveDicePool() {
-        const diceCtrl = document.getElementById('current-dice-pool-input');
-        if (!diceCtrl) return;
-        const val = parseInt(diceCtrl.value) || 1;
-        await fetch('/api/update_dice_pool', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ dice_pool: val })
-        });
-    }
+        function updateAutoRollButtonText() {
+            const diceCtrl = document.getElementById('current-dice-pool-input');
+            const autoBtn = document.getElementById('auto-roll-btn');
+            const countSpan = document.getElementById('instruction-dice-count');
+            if (diceCtrl && autoBtn) {
+                const val = diceCtrl.value || '0';
+                autoBtn.innerText = `Auto-Roll ${val}d6`;
+                if (countSpan) countSpan.innerText = val;
+            }
+        }
 
-    async function startCombat() {
-        saveSetupDefaults();
-        const payload = {
-            max_str: document.getElementById('max-str').value,
-            base_weapon_dice: document.getElementById('base-weapon-dice').value,
-            min_str_req: document.getElementById('min-str-req').value,
-            initial_adds: document.getElementById('initial-adds').value,
-            already_berserk: document.getElementById('already-berserk').checked,
-            has_insane_strength: document.getElementById('has-insane-strength').checked
-        };
-        await fetch('/api/start_combat', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        location.reload();
-    }
-
-    async function adjustStr(delta) {
-        const res = await fetch('/api/adjust_str', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ delta: delta })
-        });
-        const data = await res.json();
-        if (data.warning_msg) {
-            const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
-            showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
-                location.reload();
+        async function saveDicePool() {
+            const diceCtrl = document.getElementById('current-dice-pool-input');
+            if (!diceCtrl) return;
+            const val = parseInt(diceCtrl.value) || 1;
+            await fetch('/api/update_dice_pool', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dice_pool: val })
             });
-        } else {
+        }
+
+        async function startCombat() {
+            saveSetupDefaults();
+            const payload = {
+                max_str: document.getElementById('max-str').value,
+                base_weapon_dice: document.getElementById('base-weapon-dice').value,
+                min_str_req: document.getElementById('min-str-req').value,
+                initial_adds: document.getElementById('initial-adds').value,
+                already_berserk: document.getElementById('already-berserk').checked,
+                has_insane_strength: document.getElementById('has-insane-strength').checked
+            };
+            await fetch('/api/start_combat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
             location.reload();
         }
-    }
 
-    async function adjustAdds(delta) {
-        await fetch('/api/adjust_adds', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ delta: delta })
-        });
-        location.reload();
-    }
-
-    function validateDiceInputUI() {
-        const alertBox = document.getElementById('damage-alert');
-        const submitBtn = document.getElementById('submit-damage-btn');
-        const diceInputEl = document.getElementById('dice-input');
-        const dicePoolEl = document.getElementById('current-dice-pool-input');
-
-        if (!diceInputEl || !submitBtn) return true;
-
-        // Auto-format: keep only valid d6 digits (1-6) and insert spaces between each number
-        const rawVal = diceInputEl.value;
-        const digits = rawVal.replace(/[^1-6]/g, '');
-        const formatted = digits.split('').join(' ');
-        if (rawVal !== formatted) {
-            diceInputEl.value = formatted;
+        async function adjustStr(delta) {
+            const res = await fetch('/api/adjust_str', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delta: delta })
+            });
+            const data = await res.json();
+            if (data.warning_msg) {
+                const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
+                showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
+                    location.reload();
+                });
+            } else {
+                location.reload();
+            }
         }
 
-        const expectedCount = dicePoolEl ? parseInt(dicePoolEl.value, 10) || 1 : 1;
-        const parts = formatted === '' ? [] : formatted.split(/\s+/);
+        async function adjustAdds(delta) {
+            await fetch('/api/adjust_adds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delta: delta })
+            });
+            location.reload();
+        }
 
-        if (parts.length === 0) {
+        function validateDiceInputUI() {
+            const alertBox = document.getElementById('damage-alert');
+            const submitBtn = document.getElementById('submit-damage-btn');
+            const diceInputEl = document.getElementById('dice-input');
+            const dicePoolEl = document.getElementById('current-dice-pool-input');
+            const countSpan = document.getElementById('instruction-dice-count');
+
+            if (!diceInputEl || !submitBtn) return true;
+
+            const rawVal = diceInputEl.value;
+            const digits = rawVal.replace(/[^1-6]/g, '');
+            const formatted = digits.split('').join(' ');
+            if (rawVal !== formatted) {
+                diceInputEl.value = formatted;
+            }
+
+            let expectedCount = 1;
+            if (countSpan && countSpan.innerText) {
+                expectedCount = parseInt(countSpan.innerText, 10) || 1;
+            } else if (dicePoolEl) {
+                expectedCount = parseInt(dicePoolEl.value, 10) || 1;
+            }
+
+            const parts = formatted === '' ? [] : formatted.split(/\s+/);
+
+            if (parts.length === 0) {
+                alertBox.classList.add('hidden');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+                return false;
+            }
+
+            if (parts.length !== expectedCount) {
+                alertBox.classList.remove('hidden');
+                alertBox.innerText = `⚠️ Expected exactly ${expectedCount} dice entries, but got ${parts.length}.`;
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+                return false;
+            }
+
             alertBox.classList.add('hidden');
-            submitBtn.disabled = true;
-            submitBtn.classList.add('disabled');
-            return false;
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('disabled');
+            return true;
         }
 
-        if (parts.length !== expectedCount) {
-            alertBox.classList.remove('hidden');
-            alertBox.innerText = `⚠️ Expected exactly ${expectedCount} dice entries, but got ${parts.length}.`;
-            submitBtn.disabled = true;
-            submitBtn.classList.add('disabled');
-            return false;
-        }
+        async function submitDamage(autoRoll) {
+            const alertBox = document.getElementById('damage-alert');
+            alertBox.classList.add('hidden');
 
-        alertBox.classList.add('hidden');
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('disabled');
-        return true;
-    }
+            const diceInputEl = document.getElementById('dice-input');
+            if (!autoRoll && diceInputEl) {
+                if (!validateDiceInputUI()) {
+                    return;
+                }
+            }
 
-    async function submitDamage(autoRoll) {
-        const alertBox = document.getElementById('damage-alert');
-        alertBox.classList.add('hidden');
+            const diceInput = diceInputEl ? diceInputEl.value : '';
+            const diceCtrl = document.getElementById('current-dice-pool-input');
+            const expectedDice = diceCtrl ? diceCtrl.value : null;
 
-        const diceInputEl = document.getElementById('dice-input');
-        if (!autoRoll && diceInputEl) {
-            if (!validateDiceInputUI()) {
+            const res = await fetch('/api/roll_damage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auto_roll: autoRoll,
+                    dice_input: diceInput,
+                    expected_dice: expectedDice
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                alertBox.classList.remove('hidden');
+                alertBox.innerText = data.message;
                 return;
             }
-        }
-
-        const diceInput = diceInputEl ? diceInputEl.value : '';
-        const diceCtrl = document.getElementById('current-dice-pool-input');
-        const expectedDice = diceCtrl ? diceCtrl.value : null;
-
-        const res = await fetch('/api/roll_damage', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                auto_roll: autoRoll,
-                dice_input: diceInput,
-                expected_dice: expectedDice
-            })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-            alertBox.classList.remove('hidden');
-            alertBox.innerText = data.message;
-            return;
-        }
-        location.reload();
-    }
-
-    async function proceedNonBerserkRound() {
-        await fetch('/api/proceed_non_berserk', { method: 'POST' });
-        location.reload();
-    }
-
-    async function advanceAfterAbility() {
-        await fetch('/api/advance_after_ability', { method: 'POST' });
-        location.reload();
-    }
-
-    async function spendSpiteForBerserk() {
-        await fetch('/api/activate_berserk', { method: 'POST' });
-        location.reload();
-    }
-
-    async function toggleInsaneStrength() {
-        const res = await fetch('/api/toggle_insane_strength', { method: 'POST' });
-        const data = await res.json();
-        if (data.status === 'ok') {
             location.reload();
         }
-    }
 
-    async function submitStrLoss(autoRoll) {
-        const lossVal = document.getElementById('str-loss-input').value;
-        const res = await fetch('/api/roll_str_loss', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                auto_roll: autoRoll,
-                loss_val: lossVal
-            })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-            showModal('🦄 Error', data.message);
-            return;
+        async function proceedNonBerserkRound() {
+            await fetch('/api/proceed_non_berserk', { method: 'POST' });
+            location.reload();
         }
-        if (data.warning_msg) {
-            const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
-            showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
-                location.reload();
-            });
-            return;
+
+        async function advanceAfterAbility() {
+            await fetch('/api/advance_after_ability', { method: 'POST' });
+            location.reload();
         }
-        location.reload();
-    }
 
-    async function nextRound(stopped) {
-        await fetch('/api/next_round', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ stopped: stopped })
-        });
-        location.reload();
-    }
+        async function spendSpiteForBerserk() {
+            await fetch('/api/activate_berserk', { method: 'POST' });
+            location.reload();
+        }
 
-    function exportCSV() {
-        window.location.href = '/api/export_csv';
-    }
-
-    function confirmReset() {
-        showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, false, 8, async (confirmed) => {
-            if (confirmed) {
-                await fetch('/api/reset_combat', { method: 'POST' });
+        async function toggleInsaneStrength() {
+            const res = await fetch('/api/toggle_insane_strength', { method: 'POST' });
+            const data = await res.json();
+            if (data.status === 'ok') {
                 location.reload();
             }
-        });
-    }
+        }
 
-    async function clearCombatStorage() {
-        await fetch('/api/reset_combat', { method: 'POST' });
-        location.reload();
-    }
+        async function submitStrLoss(autoRoll) {
+            const lossVal = document.getElementById('str-loss-input').value;
+            const res = await fetch('/api/roll_str_loss', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    auto_roll: autoRoll,
+                    loss_val: lossVal
+                })
+            });
 
-    loadSetupDefaults();
-    updateAutoRollButtonText();
-    initSparkles();
-    validateDiceInputUI();
-</script>
+            const data = await res.json();
+            if (!res.ok) {
+                showModal('🦄 Error', data.message);
+                return;
+            }
+            if (data.warning_msg) {
+                const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
+                showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
+                    location.reload();
+                });
+                return;
+            }
+            location.reload();
+        }
+
+        function attemptStopBerserk() {
+            showModal(
+                '🧠 IQ Saving Roll Check',
+                'Did you successfully pass your IQ Saving Roll (or get helped by a stunt) to calm down?',
+                true,
+                false,
+                8,
+                async (passed) => {
+                    if (passed) {
+                        await nextRound(true, true);
+                    } else {
+                        showModal('🧠 Save Failed', 'IQ Save failed! You remain Berserk and proceed to the next round.', false, false, 8, async () => {
+                            await nextRound(true, false);
+                        });
+                    }
+                }
+            );
+        }
+
+        async function nextRound(stopped = false, iqPassed = false) {
+            await fetch('/api/next_round', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    stopped: stopped,
+                    iq_passed: iqPassed
+                })
+            });
+            location.reload();
+        }
+
+        function exportCSV() {
+            window.location.href = '/api/export_csv';
+        }
+
+        function confirmReset() {
+            showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, false, 8, async (confirmed) => {
+                if (confirmed) {
+                    await fetch('/api/reset_combat', { method: 'POST' });
+                    location.reload();
+                }
+            });
+        }
+
+        async function clearCombatStorage() {
+            await fetch('/api/reset_combat', { method: 'POST' });
+            location.reload();
+        }
+
+        loadSetupDefaults();
+        updateAutoRollButtonText();
+        initSparkles();
+        validateDiceInputUI();
+    </script>
 </body>
+
 </html>
