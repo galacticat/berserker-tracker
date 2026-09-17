@@ -267,12 +267,25 @@ def roll_damage():
 def activate_berserk():
     state = get_state()
     if state['berserkActive'] and state['spentSpiteThisRound'] == 2:
+        # Backing out of Berserk
         state['berserkActive'] = False
         state['spentSpiteThisRound'] -= 2
+        state['pendingSets'] = []
+        state['currentSetInfo'] = None
     else:
+        # Activating Berserk
         state['berserkActive'] = True
         state['spentSpiteThisRound'] += 2
         state['abilityActivatedThisRound'] = True
+
+        # Re-scan all dice rolled in the current round for valid explosion sets (ignoring 1s)
+        recalculated_sets = []
+        for h in state['rollHistory']:
+            dice = h.get('dice')
+            if dice:
+                recalculated_sets.extend(find_sets(dice))
+
+        state['pendingSets'] = recalculated_sets
 
     compute_and_save_final_damage(state)
     save_state(state)
