@@ -756,15 +756,17 @@
                     </div>
                     {% endif %}
 
-                    <div id="breakdown-box"
-                        class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
+                    <div class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
                         <strong>🎲 Current Round Rolls:</strong>
-                        <div id="breakdown-text">
+                        <div>
                             {% for h in state.rollHistory %}
-                            <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }}
-                                <span style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }}
-                                    Spite)</span>
+                            {% if h.dice is not none and h.dice|length > 0 %}
+                            <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
+                                    style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
                             </div>
+                            {% else %}
+                            <div>• <strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                            {% endif %}
                             {% endfor %}
                         </div>
                     </div>
@@ -797,9 +799,13 @@
                     <strong>🎲 Current Round Rolls:</strong>
                     <div>
                         {% for h in state.rollHistory %}
+                        {% if h.dice is not none and h.dice|length > 0 %}
                         <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
                                 style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
                         </div>
+                        {% else %}
+                        <div>• <strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -823,9 +829,13 @@
                     <strong>🎲 Current Round Rolls:</strong>
                     <div>
                         {% for h in state.rollHistory %}
+                        {% if h.dice is not none and h.dice|length > 0 %}
                         <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
                                 style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
                         </div>
+                        {% else %}
+                        <div>• <strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -868,28 +878,24 @@
                     <thead>
                         <tr>
                             <th>Round</th>
-                            <th>Dice Breakdown</th>
-                            <th>Dice Total</th>
-                            <th>Spite (1s)</th>
-                            <th>Adds</th>
                             <th>Total Damage Dealt</th>
+                            <th>Spite (1s)</th>
                             <th>STR Lost</th>
                             <th>STR Left</th>
                             <th>Adds Next Round</th>
+                            <th>Dice Breakdown</th>
                         </tr>
                     </thead>
                     <tbody id="history-table-body">
                         {% for row in state.historyLog|reverse %}
                         <tr>
                             <td>{{ row.round }}</td>
-                            <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
-                            <td>{{ row.dice_sum }}</td>
-                            <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
-                            <td>{{ row.adds }}</td>
                             <td style="font-weight:bold; color:var(--accent-gold);">🦄 {{ row.total_damage }}</td>
+                            <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
                             <td>-{{ row.str_lost }}</td>
                             <td>{{ row.str_remaining }}</td>
                             <td>{{ row.adds_next }}</td>
+                            <td style="text-align:left; font-size:0.85em;">{{ row.dice_breakdown }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -1073,7 +1079,8 @@
             });
             const data = await res.json();
             if (data.warning_msg) {
-                const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
+                const defaultDice = parseInt("{{ state.expectedDice }}", 10) || 8;
+                const currentDice = data.expected_dice ? data.expected_dice : defaultDice;
                 showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                     location.reload();
                 });
@@ -1211,7 +1218,8 @@
                 return;
             }
             if (data.warning_msg) {
-                const currentDice = document.getElementById('current-dice-pool-input') ? document.getElementById('current-dice-pool-input').value : 8;
+                const defaultDice = parseInt("{{ state.expectedDice }}", 10) || 8;
+                const currentDice = data.expected_dice ? data.expected_dice : defaultDice;
                 showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                     location.reload();
                 });
