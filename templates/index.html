@@ -31,6 +31,9 @@
             justify-content: center;
             position: relative;
             overflow-x: hidden;
+            overflow-y: auto;
+            /* Ensures sparkles don't force unnecessary body overflow */
+            min-height: 100vh;
         }
 
         /* Sparkle Toggle Control in Upper Left */
@@ -980,8 +983,8 @@
             for (let i = 0; i < sparkleCount; i++) {
                 const sparkle = document.createElement('div');
                 sparkle.classList.add('sparkle');
-                sparkle.style.top = Math.random() * 100 + 'vh';
-                sparkle.style.left = Math.random() * 100 + 'vw';
+                sparkle.style.top = (Math.random() * 96 + 1) + 'vh'; // Keeps sparkles safely inside [1vh, 97vh]
+                sparkle.style.left = (Math.random() * 98) + 'vw';
                 sparkle.style.setProperty('--duration', (2 + Math.random() * 3) + 's');
                 sparkle.style.animationDelay = (Math.random() * 3) + 's';
                 document.body.appendChild(sparkle);
