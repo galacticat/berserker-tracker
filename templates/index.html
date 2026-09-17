@@ -695,17 +695,15 @@
 
                 {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
                 {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
-                {% set can_afford_berserk = (state.rollHistory|length <= 1) and ((state.berserkActive and
-                    state.spentSpiteThisRound==2) or (not state.berserkActive and (state.currentSpiteTotal - (3 if
-                    state.insaneStrengthActive else 0))>= 2)) %}
+                {% set can_afford_berserk = (not state.currentSetInfo) and (state.rollHistory|length <= 1) and
+                    ((state.berserkActive and state.spentSpiteThisRound==2) or (not state.berserkActive and
+                    (state.currentSpiteTotal - (3 if state.insaneStrengthActive else 0))>= 2)) %}
                     {% set unspent_spite_for_insane = state.currentSpiteTotal - state.spentSpiteThisRound %}
                     {% set can_afford_insane = state.hasInsaneStrengthFeat and (state.insaneStrengthActive or
                     unspent_spite_for_insane >= 3) %}
 
-                    <!-- SPITE OPTIONS (ONLY AVAILABLE IN STEP 1 BEFORE CLICKING NEXT) -->
-                    {% if state.damageResolvedThisRound and not state.currentSetInfo %}
-                    <!-- BERSERK OPTION -->
-                    {% if can_afford_berserk %}
+                    <!-- BERSERK ACTIVATION (AVAILABLE ON BASE ROLL WINDOW BEFORE EXPLOSIONS) -->
+                    {% if state.damageResolvedThisRound and can_afford_berserk %}
                     <div id="spend-spite-box" class="spite-box">
                         <div
                             style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
@@ -727,15 +725,16 @@
                     </div>
                     {% endif %}
 
-                    <!-- INSANE STRENGTH OPTION -->
-                    {% if can_afford_insane %}
+                    <!-- INSANE STRENGTH ACTIVATION (AVAILABLE IMMEDIATELY WHEN UNSPENT SPITE >= 3, EVEN DURING SET EXPLOSIONS) -->
+                    {% if state.damageResolvedThisRound and can_afford_insane %}
                     <div id="insane-strength-box" class="insane-box">
                         <div
                             style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                             <div>
                                 <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
                                 <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 3+ available
-                                    Spite. Spend 3 Spite to double your STR for this round.</div>
+                                    Spite (Total: {{ unspent_spite_for_insane }}). Spend 3 Spite to double your STR for
+                                    this round.</div>
                             </div>
                             <button type="button"
                                 class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn"
@@ -750,7 +749,8 @@
                     </div>
                     {% endif %}
 
-                    <!-- YELLOW NEXT BUTTON AFTER SELECTING/HAVING AN ABILITY -->
+                    <!-- CONFIRM ABILITY NEXT BUTTON -->
+                    {% if state.damageResolvedThisRound and not state.currentSetInfo %}
                     <div id="ability-next-box" style="margin-top: 15px; margin-bottom: 15px;">
                         <button type="button" class="gold" onclick="advanceAfterAbility()">Next</button>
                     </div>
@@ -1079,7 +1079,7 @@
             });
             const data = await res.json();
             if (data.warning_msg) {
-                const defaultDice = parseInt("{{ state.expectedDice }}", 10) || 8;
+                const defaultDice = parseInt("{{ state.activeWeaponDice }}", 10) || 8;
                 const currentDice = data.expected_dice ? data.expected_dice : defaultDice;
                 showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                     location.reload();
@@ -1218,7 +1218,7 @@
                 return;
             }
             if (data.warning_msg) {
-                const defaultDice = parseInt("{{ state.expectedDice }}", 10) || 8;
+                const defaultDice = parseInt("{{ state.activeWeaponDice }}", 10) || 8;
                 const currentDice = data.expected_dice ? data.expected_dice : defaultDice;
                 showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                     location.reload();

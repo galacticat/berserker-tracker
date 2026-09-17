@@ -77,8 +77,9 @@ def find_sets(dice_list):
         counts[d] = counts.get(d, 0) + 1
     
     sets = []
+    # 1s never roll over (Spite damage only)
     for val in sorted(counts.keys()):
-        if counts[val] >= 2:
+        if val != 1 and counts[val] >= 2:
             sets.append({'val': val, 'count': counts[val]})
     return sets
 
@@ -217,31 +218,38 @@ def roll_damage():
     if state['currentSetInfo']:
         state['currentSetInfo'] = None
 
-    new_sets = find_sets(dice)
-    if is_initial_roll:
-        state['pendingSets'] = new_sets
+    # ONLY detect set explosions if Berserk mode is active!
+    if state['berserkActive']:
+        new_sets = find_sets(dice)
+        if is_initial_roll:
+            state['pendingSets'] = new_sets
+        else:
+            state['pendingSets'].extend(new_sets)
+
+        if state['pendingSets']:
+            next_set = state['pendingSets'].pop(0)
+            state['currentSetInfo'] = next_set
+            state['expectedDice'] = next_set['count']
     else:
-        state['pendingSets'].extend(new_sets)
+        state['pendingSets'] = []
+        state['currentSetInfo'] = None
 
     compute_and_save_final_damage(state)
     state['damageResolvedThisRound'] = True
-    
+
+    # Phase Routing
     total_spent = state['spentSpiteThisRound'] + (3 if state['insaneStrengthActive'] else 0)
     available_spite = max(0, state['currentSpiteTotal'] - total_spent)
-    can_afford_insane = state['hasInsaneStrengthFeat'] and available_spite >= 3
+    can_afford_berserk = (not state['berserkActive']) and (available_spite >= 2)
+    can_afford_insane = state['hasInsaneStrengthFeat'] and (state['insaneStrengthActive'] or available_spite >= 3)
 
-    if state['berserkActive'] and state['pendingSets']:
-        next_set = state['pendingSets'].pop(0)
-        state['currentSetInfo'] = next_set
-        state['expectedDice'] = next_set['count']
-        state['activePhase'] = 'damage'
-    elif state['berserkActive'] and not state['pendingSets']:
-        if can_afford_insane and not state['insaneStrengthActive']:
+    if state['berserkActive']:
+        if state['pendingSets'] or state['currentSetInfo'] or can_afford_insane:
             state['activePhase'] = 'damage'
         else:
             state['activePhase'] = 'str_loss'
     else:
-        if available_spite >= 2 and not state['abilityActivatedThisRound']:
+        if can_afford_berserk or can_afford_insane:
             state['activePhase'] = 'damage'
         else:
             state['activePhase'] = 'results'
@@ -371,11 +379,11 @@ def roll_str_loss():
     save_state(state)
 
     return jsonify({
-        'status': 'ok',
-        'warning_msg': warning_msg,
-        'expected_dice': state['expectedDice'],
-        'state': state
-    })
+    'status': 'ok',
+    'warning_msg': warning_msg,
+    'expected_dice': state['activeWeaponDice'],
+    'state': state
+})
 
 
 @app.route('/api/adjust_str', methods=['POST'])
@@ -396,11 +404,11 @@ def adjust_str():
 
     save_state(state)
     return jsonify({
-        'status': 'ok',
-        'warning_msg': warning_msg,
-        'expected_dice': state['expectedDice'],
-        'state': state
-    })
+    'status': 'ok',
+    'warning_msg': warning_msg,
+    'expected_dice': state['activeWeaponDice'],
+    'state': state
+})
 
 
 @app.route('/api/adjust_adds', methods=['POST'])
@@ -417,8 +425,7 @@ def adjust_adds():
 def proceed_non_berserk():
     state = get_state()
     finalize_round_history(state, str_lost=0)
-    save_state(state)
-    # Reset round state variables for non-berserk rounds directly
+    
     state['roundNum'] += 1
     state['insaneStrengthActive'] = False
     state['spentSpiteThisRound'] = 0
