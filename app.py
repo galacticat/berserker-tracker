@@ -9,6 +9,8 @@ app = Flask(__name__)
 DEFAULT_STATE = {
     'inCombat': False,
     'roundNum': 1,
+    'level': 1,
+    'iq': 12,
     'maxStr': 40,
     'currentStr': 40,
     'baseWeaponDice': 8,
@@ -131,6 +133,8 @@ def start_combat():
     data = request.json
     state = get_state()
 
+    char_level = int(data.get('level', 1))
+    char_iq = int(data.get('iq', 12))
     max_str = int(data.get('max_str', 40))
     base_dice = int(data.get('base_weapon_dice', 8))
     min_str = int(data.get('min_str_req', 15))
@@ -141,6 +145,8 @@ def start_combat():
     state.update({
         'inCombat': True,
         'roundNum': 1,
+        'level': char_level,
+        'iq': char_iq,
         'maxStr': max_str,
         'currentStr': max_str,
         'baseWeaponDice': base_dice,
@@ -366,6 +372,9 @@ def roll_str_loss():
     new_adds = max(0, state['currentAdds'] - str_lost)
     state['currentAdds'] = new_adds
 
+    # Store str_lost in state temporarily so next_round can log it accurately
+    state['lastStrLost'] = str_lost
+
     warning_msg = None
     if new_str < state['minStrReq']:
         if not state['minStrWarningTriggered']:
@@ -374,9 +383,11 @@ def roll_str_loss():
     else:
         state['minStrWarningTriggered'] = False
 
-    finalize_round_history(state, str_lost=str_lost)
+    # ❌ REMOVED: finalize_round_history(state, str_lost=str_lost)
+    # The history will now be finalized once at the end of the round in next_round()
 
     if new_str <= 0:
+        finalize_round_history(state, str_lost=str_lost) # Keep for death/unconscious state
         state['activePhase'] = 'summary'
         state['summaryMsg'] = "💀 Your Strength reached 0! You have fallen unconscious from exhaustion."
         save_state(state)
@@ -392,12 +403,20 @@ def roll_str_loss():
     save_state(state)
 
     return jsonify({
-    'status': 'ok',
-    'warning_msg': warning_msg,
-    'expected_dice': state['activeWeaponDice'],
-    'state': state
-})
+        'status': 'ok',
+        'warning_msg': warning_msg,
+        'expected_dice': state['activeWeaponDice'],
+        'state': state
+    })
 
+@app.route('/api/adjust_iq', methods=['POST'])
+def adjust_iq():
+    state = get_state()
+    data = request.json or {}
+    delta = int(data.get('delta', 0))
+    state['iq'] = max(1, state.get('iq', 12) + delta)
+    save_state(state)
+    return jsonify({'status': 'ok', 'state': state})
 
 @app.route('/api/adjust_str', methods=['POST'])
 def adjust_str():
@@ -455,7 +474,25 @@ def proceed_non_berserk():
     state['activePhase'] = 'damage'
     save_state(state)
     return jsonify({'status': 'ok', 'state': state})
+@app.route('/api/stunt_stop_berserk', methods=['POST'])
+def stunt_stop_berserk():
+    state = get_state()
+    
+    state['berserkActive'] = False
+    
+    state['rollHistory'].append({
+        'phase': "🤝 Helping Stunt Calmed Berserker! (Exited Berserk)",
+        'dice': None,
+        'sum': 0,
+        'spite': 0
+    })
 
+    save_state(state)
+    return jsonify({
+        'status': 'ok',
+        'message': "🤝 A helping stunt successfully snapped you out of your rage! You have exited Berserk mode.",
+        'state': state
+    })
 
 @app.route('/api/next_round', methods=['POST'])
 def next_round():
@@ -463,8 +500,31 @@ def next_round():
     data = request.json or {}
 
     stop_requested = data.get('stopped', False)
-    iq_passed = data.get('iq_passed', False)
+    iq_status = data.get('iq_status')  # 'passed', 'failed', or None
 
+    # Log IQ Save outcome to rollHistory if an IQ check was performed
+    if iq_status == 'passed':
+        state['rollHistory'].append({
+            'phase': f"🧠 Passed Level {state.get('level', 1)} IQ Saving Roll",
+            'dice': None,
+            'sum': 0,
+            'spite': 0
+        })
+    elif iq_status == 'failed':
+        state['rollHistory'].append({
+            'phase': f"🧠 Failed Level {state.get('level', 1)} IQ Saving Roll",
+            'dice': None,
+            'sum': 0,
+            'spite': 0
+        })
+
+    # Retrieve 1d6 STR lost value from this round (defaults to 0 if non-berserk)
+    str_lost = state.pop('lastStrLost', 0)
+
+    # Finalize history log EXACTLY ONCE for the current round
+    finalize_round_history(state, str_lost=str_lost)
+
+    # Advance to next round state
     state['roundNum'] += 1
     state['insaneStrengthActive'] = False
     state['spentSpiteThisRound'] = 0
@@ -480,7 +540,7 @@ def next_round():
     state['rollHistory'] = []
     state['activePhase'] = 'damage'
 
-    if stop_requested and iq_passed:
+    if stop_requested:
         state['berserkActive'] = False
 
     save_state(state)

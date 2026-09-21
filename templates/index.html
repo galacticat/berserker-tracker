@@ -32,7 +32,6 @@
             position: relative;
             overflow-x: hidden;
             overflow-y: auto;
-            /* Ensures sparkles don't force unnecessary body overflow */
             min-height: 100vh;
         }
 
@@ -146,10 +145,10 @@
             font-size: 0.85em;
         }
 
-        /* Stat Banner Grid Layout: Mobile 2-row layout, Desktop 3 equal columns */
+        /* Stat Banner Grid Layout */
         .stat-banner {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             background: #1f0d38;
             padding: 10px;
@@ -173,22 +172,14 @@
             padding: 8px;
         }
 
-        .stat-item.stat-subitem {
-            grid-column: span 1;
-        }
-
         @media (min-width: 768px) {
             .stat-banner {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(5, 1fr);
             }
 
             .stat-item.round-item {
                 grid-column: span 1;
                 padding: 8px;
-            }
-
-            .stat-item.stat-subitem {
-                grid-column: span 1;
             }
         }
 
@@ -226,6 +217,37 @@
 
         .buff-btn:hover {
             background: #6b3ca6;
+        }
+
+        /* Berserk UI Styling */
+        .berserk-active-border {
+            border: 2px solid #ff4d4d !important;
+            box-shadow: 0 0 20px rgba(255, 77, 77, 0.4) !important;
+        }
+
+        .berserk-status-banner {
+            background: linear-gradient(135deg, #800000 0%, #b30000 100%);
+            color: #ffffff;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.15rem;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ff4d4d;
+            box-shadow: 0 0 12px rgba(255, 77, 77, 0.5);
+            letter-spacing: 1.5px;
+            animation: berserkGlow 1.5s infinite alternate;
+        }
+
+        @keyframes berserkGlow {
+            0% {
+                box-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
+            }
+
+            100% {
+                box-shadow: 0 0 18px rgba(255, 77, 77, 0.9);
+            }
         }
 
         .section {
@@ -509,6 +531,7 @@
             font-size: 0.95em;
             margin-bottom: 15px;
             line-height: 1.4;
+            white-space: pre-line;
         }
 
         .modal-dice-group {
@@ -581,6 +604,13 @@
         <!-- SETUP FORM -->
         <div id="setup-section" class="section {% if state.inCombat %}hidden{% endif %}">
             <h3>Character & Weapon Setup</h3>
+
+            <label>Character Level:</label>
+            <input type="number" id="char-level" value="{{ state.level }}" min="1" onchange="saveSetupDefaults()">
+
+            <label>Intelligence (IQ):</label>
+            <input type="number" id="char-iq" value="{{ state.iq }}" min="1" onchange="saveSetupDefaults()">
+
             <label>Starting / Max Strength (STR):</label>
             <input type="number" id="max-str" value="{{ state.maxStr }}" min="1" onchange="saveSetupDefaults()">
 
@@ -619,7 +649,9 @@
         </div>
 
         <!-- MAIN DASHBOARD -->
-        <div id="combat-section" class="{% if not state.inCombat %}hidden{% endif %}">
+        <div id="combat-section"
+            class="{% if not state.inCombat %}hidden{% endif %} {% if state.berserkActive %}berserk-active-border{% endif %}"
+            style="padding: 12px; border-radius: 10px; transition: border 0.3s ease;">
             <div class="stat-banner">
                 <!-- ROUND -->
                 <div class="stat-item round-item">
@@ -629,9 +661,31 @@
                         <button type="button" class="buff-btn">+5</button>
                     </div>
                 </div>
+
+                <!-- LEVEL -->
+                <div class="stat-item stat-subitem">
+                    <div style="font-size: 0.85em;">Level</div>
+                    <div class="stat-val" id="disp-level">Lvl {{ state.level }}</div>
+                    <div class="buff-controls" style="visibility: hidden; pointer-events: none;">
+                        <button type="button" class="buff-btn">+5</button>
+                    </div>
+                </div>
+
+                <!-- IQ BANNER ITEM -->
+                <div class="stat-item stat-subitem">
+                    <div style="font-size: 0.85em;">Intelligence (IQ)</div>
+                    <div class="stat-val" id="disp-iq">{{ state.iq }}</div>
+                    <div class="buff-controls">
+                        <button type="button" class="buff-btn" onclick="adjustIq(5)" title="Buff +5 IQ">+5</button>
+                        <button type="button" class="buff-btn" onclick="adjustIq(1)" title="Buff +1 IQ">+1</button>
+                        <button type="button" class="buff-btn" onclick="adjustIq(-1)" title="Debuff -1 IQ">-1</button>
+                        <button type="button" class="buff-btn" onclick="adjustIq(-5)" title="Debuff -5 IQ">-5</button>
+                    </div>
+                </div>
+
                 <!-- STR BANNER ITEM -->
                 <div class="stat-item stat-subitem">
-                    <div>Strength (STR)</div>
+                    <div style="font-size: 0.85em;">Strength (STR)</div>
                     <div class="stat-val" id="disp-str">
                         {% if state.insaneStrengthActive %}
                         {{ state.currentStr * 2 }} ({{ state.currentStr }}x2)
@@ -646,9 +700,10 @@
                         <button type="button" class="buff-btn" onclick="adjustStr(-5)" title="Debuff -5 STR">-5</button>
                     </div>
                 </div>
+
                 <!-- ADDS BANNER ITEM -->
                 <div class="stat-item stat-subitem">
-                    <div>Active Adds</div>
+                    <div style="font-size: 0.85em;">Active Adds</div>
                     <div class="stat-val" id="disp-adds">+{{ state.currentAdds + (state.currentStr if
                         state.insaneStrengthActive else 0) }}</div>
                     <div class="buff-controls">
@@ -661,6 +716,13 @@
                     </div>
                 </div>
             </div>
+
+            <!-- BERSERK STATUS INDICATOR -->
+            {% if state.berserkActive %}
+            <div class="berserk-status-banner">
+                🔥 BERSERK MODE ACTIVE 🔥
+            </div>
+            {% endif %}
 
             <!-- STEP 1: DAMAGE PHASE -->
             <div id="damage-panel" class="section {% if state.activePhase != 'damage' %}hidden{% endif %}">
@@ -705,7 +767,7 @@
                     {% set can_afford_insane = state.hasInsaneStrengthFeat and (state.insaneStrengthActive or
                     unspent_spite_for_insane >= 3) %}
 
-                    <!-- BERSERK ACTIVATION (AVAILABLE ON BASE ROLL WINDOW BEFORE EXPLOSIONS) -->
+                    <!-- BERSERK ACTIVATION -->
                     {% if state.damageResolvedThisRound and can_afford_berserk %}
                     <div id="spend-spite-box" class="spite-box">
                         <div
@@ -728,7 +790,7 @@
                     </div>
                     {% endif %}
 
-                    <!-- INSANE STRENGTH ACTIVATION (AVAILABLE IMMEDIATELY WHEN UNSPENT SPITE >= 3, EVEN DURING SET EXPLOSIONS) -->
+                    <!-- INSANE STRENGTH ACTIVATION -->
                     {% if state.damageResolvedThisRound and can_afford_insane %}
                     <div id="insane-strength-box" class="insane-box">
                         <div
@@ -844,14 +906,29 @@
                 </div>
 
                 {% if state.berserkActive %}
+                {% set target_score = 20 + (state.level - 1) * 5 %}
                 <div class="instruction-card" style="border-color: var(--accent-gold);">
                     <strong>🧠 ATTEMPT TO CALM DOWN:</strong>
-                    <div>Roll an <strong>IQ Saving Roll</strong> (or use a helping stunt) to stop Berserking!</div>
+                    <div>
+                        Roll <strong>2d6</strong> to make a <strong>Level {{ state.level }} IQ Saving Roll</strong>.
+                        Target Score: <strong style="color: var(--accent-gold);">{{ target_score }}</strong>
+                        (Target {{ target_score }} - IQ {{ state.iq }} = need <strong
+                            style="color: var(--accent-pink);">{{ target_score - state.iq }}</strong> on 2d6 DARO), or
+                        have an ally perform a <strong>Helping Stunt</strong>!
+                    </div>
                 </div>
-                <div>
-                    <button type="button" class="alt" onclick="nextRound(false, false)">Continue Berserking Next
-                        Round</button>
-                    <button type="button" class="gold" onclick="attemptStopBerserk()">Stop Berserking</button>
+
+                <!-- IQ Save Manual Decision Buttons -->
+                <div style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button type="button" class="alt" onclick="resolveIqManual(true)">✅ Passed IQ Roll</button>
+                    <button type="button" style="background: #a4243b; color: #fff;" onclick="resolveIqManual(false)">❌
+                        Failed IQ Roll</button>
+                    <button type="button" class="purple" onclick="submitStuntStop()">🤝 Helping Stunt</button>
+                </div>
+
+                <div style="margin-top: 15px; border-top: 1px dashed rgba(155, 93, 229, 0.4); padding-top: 10px;">
+                    <button type="button" class="alt" onclick="nextRound(false)">Skip IQ Save & Continue
+                        Berserking</button>
                 </div>
                 {% else %}
                 <button type="button" class="alt" onclick="proceedNonBerserkRound()">Proceed to Next Round</button>
@@ -983,7 +1060,7 @@
             for (let i = 0; i < sparkleCount; i++) {
                 const sparkle = document.createElement('div');
                 sparkle.classList.add('sparkle');
-                sparkle.style.top = (Math.random() * 96 + 1) + 'vh'; // Keeps sparkles safely inside [1vh, 97vh]
+                sparkle.style.top = (Math.random() * 96 + 1) + 'vh';
                 sparkle.style.left = (Math.random() * 98) + 'vw';
                 sparkle.style.setProperty('--duration', (2 + Math.random() * 3) + 's');
                 sparkle.style.animationDelay = (Math.random() * 3) + 's';
@@ -1006,11 +1083,26 @@
             }
         }
 
+        function focusDiceInput() {
+            const diceInput = document.getElementById('dice-input');
+            const damagePanel = document.getElementById('damage-panel');
+
+            if (diceInput && damagePanel && !damagePanel.classList.contains('hidden')) {
+                setTimeout(() => {
+                    diceInput.focus();
+                    const valLen = diceInput.value.length;
+                    diceInput.setSelectionRange(valLen, valLen);
+                }, 50);
+            }
+        }
+
         function loadSetupDefaults() {
             const saved = localStorage.getItem(SETUP_DEFAULTS_KEY);
             if (!saved) return;
             try {
                 const defaults = JSON.parse(saved);
+                if (defaults.level) document.getElementById('char-level').value = defaults.level;
+                if (defaults.iq) document.getElementById('char-iq').value = defaults.iq;
                 if (defaults.maxStr) document.getElementById('max-str').value = defaults.maxStr;
                 if (defaults.baseWeaponDice) document.getElementById('base-weapon-dice').value = defaults.baseWeaponDice;
                 if (defaults.minStrReq) document.getElementById('min-str-req').value = defaults.minStrReq;
@@ -1024,6 +1116,8 @@
 
         function saveSetupDefaults() {
             const defaults = {
+                level: document.getElementById('char-level').value,
+                iq: document.getElementById('char-iq').value,
                 maxStr: document.getElementById('max-str').value,
                 baseWeaponDice: document.getElementById('base-weapon-dice').value,
                 minStrReq: document.getElementById('min-str-req').value,
@@ -1059,6 +1153,8 @@
         async function startCombat() {
             saveSetupDefaults();
             const payload = {
+                level: document.getElementById('char-level').value,
+                iq: document.getElementById('char-iq').value,
                 max_str: document.getElementById('max-str').value,
                 base_weapon_dice: document.getElementById('base-weapon-dice').value,
                 min_str_req: document.getElementById('min-str-req').value,
@@ -1070,6 +1166,15 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
+            });
+            location.reload();
+        }
+
+        async function adjustIq(delta) {
+            await fetch('/api/adjust_iq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delta: delta })
             });
             location.reload();
         }
@@ -1231,32 +1336,65 @@
             location.reload();
         }
 
-        function attemptStopBerserk() {
+        async function resolveIqManual(passed) {
+            if (passed) {
+                showModal('🧠 IQ Save Passed', 'You successfully made your IQ Saving Roll and exited Berserk mode!', false, false, 8, async () => {
+                    await nextRound(true, 'passed');
+                });
+            } else {
+                showModal(
+                    '🧠 IQ Save Failed',
+                    'You failed your IQ Saving Roll!\n\nDid an ally successfully perform a Helping Stunt to snap you out of your rage?',
+                    true,
+                    false,
+                    8,
+                    async (confirmed) => {
+                        if (confirmed) {
+                            await fetch('/api/stunt_stop_berserk', { method: 'POST' });
+                            await nextRound(true, 'failed');
+                        } else {
+                            await nextRound(false, 'failed');
+                        }
+                    }
+                );
+
+                const okBtn = document.getElementById('modal-ok-btn');
+                const cancelBtn = document.getElementById('modal-cancel-btn');
+                if (okBtn) okBtn.innerText = 'Yes';
+                if (cancelBtn) cancelBtn.innerText = 'No';
+            }
+        }
+
+        async function submitStuntStop() {
             showModal(
-                '🧠 IQ Saving Roll Check',
-                'Did you successfully pass your IQ Saving Roll (or get helped by a stunt) to calm down?',
+                '🤝 Helping Stunt',
+                'Did an ally successfully perform a stunt to help snap you out of your Berserk rage?',
                 true,
                 false,
                 8,
-                async (passed) => {
-                    if (passed) {
-                        await nextRound(true, true);
+                async (confirmed) => {
+                    if (confirmed) {
+                        await fetch('/api/stunt_stop_berserk', { method: 'POST' });
+                        await nextRound(true);
                     } else {
-                        showModal('🧠 Save Failed', 'IQ Save failed! You remain Berserk and proceed to the next round.', false, false, 8, async () => {
-                            await nextRound(true, false);
-                        });
+                        await nextRound(false);
                     }
                 }
             );
+
+            const okBtn = document.getElementById('modal-ok-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+            if (okBtn) okBtn.innerText = 'Yes';
+            if (cancelBtn) cancelBtn.innerText = 'No';
         }
 
-        async function nextRound(stopped = false, iqPassed = false) {
+        async function nextRound(stopBerserk = false, iqStatus = null) {
             await fetch('/api/next_round', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    stopped: stopped,
-                    iq_passed: iqPassed
+                    stopped: stopBerserk,
+                    iq_status: iqStatus
                 })
             });
             location.reload();
@@ -1273,21 +1411,6 @@
                     location.reload();
                 }
             });
-        }
-
-        function focusDiceInput() {
-            const diceInput = document.getElementById('dice-input');
-            const damagePanel = document.getElementById('damage-panel');
-
-            // Only focus if the damage panel is currently visible and not hidden
-            if (diceInput && damagePanel && !damagePanel.classList.contains('hidden')) {
-                setTimeout(() => {
-                    diceInput.focus();
-                    // Move cursor to the end of existing input text if any
-                    const valLen = diceInput.value.length;
-                    diceInput.setSelectionRange(valLen, valLen);
-                }, 50);
-            }
         }
 
         async function clearCombatStorage() {
