@@ -776,7 +776,7 @@
 
                     {% if not state.damageResolvedThisRound or state.currentSetInfo %}
                     <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4"
-                        oninput="validateDiceInputUI()">
+                        oninput="validateDiceInputUI()" autofocus>
                     <div>
                         <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit {% if
                             state.currentSetInfo %}Rollover{% else %}Manual{% endif %} Roll</button>
@@ -1275,6 +1275,21 @@
             });
         }
 
+        function focusDiceInput() {
+            const diceInput = document.getElementById('dice-input');
+            const damagePanel = document.getElementById('damage-panel');
+
+            // Only focus if the damage panel is currently visible and not hidden
+            if (diceInput && damagePanel && !damagePanel.classList.contains('hidden')) {
+                setTimeout(() => {
+                    diceInput.focus();
+                    // Move cursor to the end of existing input text if any
+                    const valLen = diceInput.value.length;
+                    diceInput.setSelectionRange(valLen, valLen);
+                }, 50);
+            }
+        }
+
         async function clearCombatStorage() {
             await fetch('/api/reset_combat', { method: 'POST' });
             location.reload();
@@ -1284,6 +1299,7 @@
         updateAutoRollButtonText();
         initSparkles();
         validateDiceInputUI();
+        focusDiceInput();
     </script>
 </body>
 
