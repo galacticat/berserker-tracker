@@ -94,7 +94,11 @@ def compute_and_save_final_damage(state):
     total = state['currentDiceSum'] + adds
     state['finalDamageThisRound'] = total
     
-    spite_msg = f" (Dealt {state['currentSpiteTotal']} direct Spite Damage!)" if state['currentSpiteTotal'] > 0 else ""
+    # Calculate net Spite remaining after spending points on abilities
+    total_spent = state['spentSpiteThisRound'] + (3 if state['insaneStrengthActive'] else 0)
+    net_spite = max(0, state['currentSpiteTotal'] - total_spent)
+    
+    spite_msg = f" (Dealt {net_spite} direct Spite Damage!)" if net_spite > 0 else ""
     state['lastDamageMessage'] = f"Rolled a total dice sum of {state['currentDiceSum']} + {adds} adds = {total} Total Damage!{spite_msg}"
 
 
@@ -108,11 +112,14 @@ def finalize_round_history(state, str_lost=0):
 
     breakdown_str = " ➔ ".join(breakdown_parts)
 
+    total_spent = state['spentSpiteThisRound'] + (3 if state['insaneStrengthActive'] else 0)
+    net_spite = max(0, state['currentSpiteTotal'] - total_spent)
+
     state['historyLog'].append({
         'round': state['roundNum'],
         'dice_breakdown': breakdown_str,
         'dice_sum': state['currentDiceSum'],
-        'spite': state['currentSpiteTotal'],
+        'spite': net_spite,
         'adds': state['currentAdds'],
         'total_damage': state['finalDamageThisRound'],
         'str_lost': str_lost,
@@ -224,7 +231,6 @@ def roll_damage():
     if state['currentSetInfo']:
         state['currentSetInfo'] = None
 
-    # ONLY detect set explosions if Berserk mode is active!
     if state['berserkActive']:
         new_sets = find_sets(dice)
         if is_initial_roll:
@@ -243,7 +249,6 @@ def roll_damage():
     compute_and_save_final_damage(state)
     state['damageResolvedThisRound'] = True
 
-    # Phase Routing
     total_spent = state['spentSpiteThisRound'] + (3 if state['insaneStrengthActive'] else 0)
     available_spite = max(0, state['currentSpiteTotal'] - total_spent)
     can_afford_berserk = (not state['berserkActive']) and (available_spite >= 2)
@@ -273,18 +278,15 @@ def roll_damage():
 def activate_berserk():
     state = get_state()
     if state['berserkActive'] and state['spentSpiteThisRound'] == 2:
-        # Backing out of Berserk
         state['berserkActive'] = False
         state['spentSpiteThisRound'] -= 2
         state['pendingSets'] = []
         state['currentSetInfo'] = None
     else:
-        # Activating Berserk
         state['berserkActive'] = True
         state['spentSpiteThisRound'] += 2
         state['abilityActivatedThisRound'] = True
 
-        # Re-scan all dice rolled in the current round for valid explosion sets (ignoring 1s)
         recalculated_sets = []
         for h in state['rollHistory']:
             dice = h.get('dice')
@@ -372,7 +374,6 @@ def roll_str_loss():
     new_adds = max(0, state['currentAdds'] - str_lost)
     state['currentAdds'] = new_adds
 
-    # Store str_lost in state temporarily so next_round can log it accurately
     state['lastStrLost'] = str_lost
 
     warning_msg = None
@@ -383,11 +384,8 @@ def roll_str_loss():
     else:
         state['minStrWarningTriggered'] = False
 
-    # ❌ REMOVED: finalize_round_history(state, str_lost=str_lost)
-    # The history will now be finalized once at the end of the round in next_round()
-
     if new_str <= 0:
-        finalize_round_history(state, str_lost=str_lost) # Keep for death/unconscious state
+        finalize_round_history(state, str_lost=str_lost)
         state['activePhase'] = 'summary'
         state['summaryMsg'] = "💀 Your Strength reached 0! You have fallen unconscious from exhaustion."
         save_state(state)
@@ -409,6 +407,7 @@ def roll_str_loss():
         'state': state
     })
 
+
 @app.route('/api/adjust_iq', methods=['POST'])
 def adjust_iq():
     state = get_state()
@@ -417,6 +416,7 @@ def adjust_iq():
     state['iq'] = max(1, state.get('iq', 12) + delta)
     save_state(state)
     return jsonify({'status': 'ok', 'state': state})
+
 
 @app.route('/api/adjust_str', methods=['POST'])
 def adjust_str():
@@ -436,11 +436,11 @@ def adjust_str():
 
     save_state(state)
     return jsonify({
-    'status': 'ok',
-    'warning_msg': warning_msg,
-    'expected_dice': state['activeWeaponDice'],
-    'state': state
-})
+        'status': 'ok',
+        'warning_msg': warning_msg,
+        'expected_dice': state['activeWeaponDice'],
+        'state': state
+    })
 
 
 @app.route('/api/adjust_adds', methods=['POST'])
@@ -474,10 +474,11 @@ def proceed_non_berserk():
     state['activePhase'] = 'damage'
     save_state(state)
     return jsonify({'status': 'ok', 'state': state})
+
+
 @app.route('/api/stunt_stop_berserk', methods=['POST'])
 def stunt_stop_berserk():
     state = get_state()
-    
     state['berserkActive'] = False
     
     state['rollHistory'].append({
@@ -494,15 +495,15 @@ def stunt_stop_berserk():
         'state': state
     })
 
+
 @app.route('/api/next_round', methods=['POST'])
 def next_round():
     state = get_state()
     data = request.json or {}
 
     stop_requested = data.get('stopped', False)
-    iq_status = data.get('iq_status')  # 'passed', 'failed', or None
+    iq_status = data.get('iq_status')
 
-    # Log IQ Save outcome to rollHistory if an IQ check was performed
     if iq_status == 'passed':
         state['rollHistory'].append({
             'phase': f"🧠 Passed Level {state.get('level', 1)} IQ Saving Roll",
@@ -518,13 +519,9 @@ def next_round():
             'spite': 0
         })
 
-    # Retrieve 1d6 STR lost value from this round (defaults to 0 if non-berserk)
     str_lost = state.pop('lastStrLost', 0)
-
-    # Finalize history log EXACTLY ONCE for the current round
     finalize_round_history(state, str_lost=str_lost)
 
-    # Advance to next round state
     state['roundNum'] += 1
     state['insaneStrengthActive'] = False
     state['spentSpiteThisRound'] = 0
