@@ -17,6 +17,7 @@
             --accent-green: #2a9d8f;
             --accent-purple: #9b5de5;
             --accent-unicorn: #f15bb5;
+            --accent-flame: #ff6b35;
             --text-color: #f8edeb;
         }
 
@@ -356,6 +357,11 @@
             color: #fff;
         }
 
+        button.flame {
+            background: var(--accent-flame);
+            color: #fff;
+        }
+
         button.active-feat {
             background: #2a9d8f !important;
             color: #fff;
@@ -382,6 +388,20 @@
             margin: 10px 0;
             line-height: 1.4;
             font-size: 0.95em;
+        }
+
+        .instruction-card.sunflame-border {
+            border-color: var(--accent-flame);
+        }
+
+        .instruction-card.gold-border {
+            border-color: var(--accent-gold);
+        }
+
+        .instruction-card.summary-border {
+            font-size: 1.05em;
+            background: rgba(74, 21, 53, 0.4);
+            border-color: var(--accent-unicorn);
         }
 
         .roll-breakdown {
@@ -411,6 +431,35 @@
             border-radius: 6px;
             margin-bottom: 15px;
             font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .result-badge-fire {
+            margin-top: 6px;
+            color: var(--accent-flame);
+            font-weight: bold;
+        }
+
+        .result-badge-stun {
+            margin-top: 6px;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .spite-pool-banner {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 209, 102, 0.14);
+            border: 1px solid var(--accent-gold);
+            border-radius: 6px;
+            font-size: 0.95em;
+            color: var(--accent-gold);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .spite-box {
@@ -429,6 +478,41 @@
             border-radius: 6px;
             border: 1px solid var(--accent-purple);
             border-left: 4px solid var(--accent-purple);
+        }
+
+        .stunning-box {
+            margin-bottom: 12px;
+            background: rgba(255, 209, 102, 0.12);
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--accent-gold);
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .sunflame-box {
+            margin-bottom: 12px;
+            background: rgba(255, 107, 53, 0.16);
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--accent-flame);
+            border-left: 4px solid var(--accent-flame);
+        }
+
+        .sunflame-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sunflame-controls input[type="number"] {
+            width: 65px;
+            margin-bottom: 0;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent-gold);
+            border-color: var(--accent-flame);
         }
 
         .table-responsive {
@@ -614,7 +698,7 @@
             <label>Starting / Max Strength (STR):</label>
             <input type="number" id="max-str" value="{{ state.maxStr }}" min="1" onchange="saveSetupDefaults()">
 
-            <label>Weapon Damage Dice Pool (e.g. 8 for 8d6 weapon):</label>
+            <label>Weapon Damage Dice Pool (e.g. 7 for Sunfire 7d6):</label>
             <input type="number" id="base-weapon-dice" value="{{ state.baseWeaponDice }}" min="1"
                 onchange="saveSetupDefaults()">
 
@@ -642,6 +726,26 @@
                     <strong>Character Feat: 3/ Insane Strength</strong>
                     <div style="font-size:0.85em; color:#d8b4fe;">Triggered on 3 Available Spite: "Your STR doubles for
                         the current combat round! Refigure your combat adds."</div>
+                </div>
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="has-stunning-blow" {% if state.hasStunningBlowFeat %}checked{% endif %}
+                    onchange="saveSetupDefaults()">
+                <div>
+                    <strong>Weapon Ability: 2/ Stunning Blow</strong>
+                    <div style="font-size:0.85em; color:#d8b4fe;">Triggered on 2 Available Spite: "Your target is seeing
+                        stars, and loses ½ HPT for the rest of the combat round!"</div>
+                </div>
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="has-sunflame" {% if state.hasSunflameFeat %}checked{% endif %}
+                    onchange="saveSetupDefaults()">
+                <div>
+                    <strong>Weapon Ability: 3+/ Sunflame</strong>
+                    <div style="font-size:0.85em; color:#d8b4fe;">Spend 3 Spite to activate during combat; after normal
+                        or Berserker damage finishes, add extra Spite (+1d6 each) and roll all fire damage!</div>
                 </div>
             </div>
 
@@ -727,18 +831,26 @@
             <!-- STEP 1: DAMAGE PHASE -->
             <div id="damage-panel" class="section {% if state.activePhase != 'damage' %}hidden{% endif %}">
                 <h3 id="damage-title">
-                    {% if state.currentSetInfo %}
+                    {% if state.sunflameActiveRoll %}
+                    🔥 SUNFLAME FIRE BLAST!
+                    {% elif state.sunflamePostCombatPhase %}
+                    🔥 SUNFLAME FIRE PHASE
+                    {% elif state.currentSetInfo %}
                     🦄 BERSERK EXPLOSION DETECTED!
                     {% else %}
                     Step 1: Roll Weapon Damage
                     {% endif %}
                 </h3>
 
-                {% if not state.damageResolvedThisRound or state.currentSetInfo %}
-                <div id="action-box" class="instruction-card">
+                {% if not state.damageResolvedThisRound or state.currentSetInfo or state.sunflameActiveRoll %}
+                <div id="action-box"
+                    class="instruction-card {% if state.sunflameActiveRoll %}sunflame-border{% endif %}">
                     <strong>📋 WHAT TO DO NOW:</strong>
                     <div id="action-text">
-                        {% if state.currentSetInfo %}
+                        {% if state.sunflameActiveRoll %}
+                        Roll <strong id="instruction-dice-count">{{ state.expectedDice }}</strong> additional d6 of
+                        <strong>Sunflame fire damage</strong>! (Any 1s rolled can be spent to add more fire d6s!)
+                        {% elif state.currentSetInfo %}
                         Roll <strong id="instruction-dice-count">{{ state.expectedDice }}</strong> additional d6 for
                         your set of {{ state.currentSetInfo.val }}s!
                         {% else %}
@@ -749,7 +861,7 @@
                 </div>
                 {% endif %}
 
-                {% if not state.currentSetInfo %}
+                {% if not state.currentSetInfo and not state.sunflameActiveRoll and not state.damageResolvedThisRound %}
                 <div id="dice-adjust-box" class="inline-dice-ctrl">
                     <label for="current-dice-pool-input" style="margin-top:0;">🎲 Dice Pool:</label>
                     <input type="number" id="current-dice-pool-input" value="{{ state.expectedDice }}" min="1"
@@ -758,96 +870,215 @@
                 </div>
                 {% endif %}
 
-                {% set total_spent = state.spentSpiteThisRound + (3 if state.insaneStrengthActive else 0) %}
-                {% set available_spite = [0, state.currentSpiteTotal - total_spent]|max %}
-                {% set can_afford_berserk = (not state.currentSetInfo) and (state.rollHistory|length <= 1) and
-                    ((state.berserkActive and state.spentSpiteThisRound==2) or (not state.berserkActive and
-                    (state.currentSpiteTotal - (3 if state.insaneStrengthActive else 0))>= 2)) %}
-                    {% set unspent_spite_for_insane = state.currentSpiteTotal - state.spentSpiteThisRound %}
-                    {% set can_afford_insane = state.hasInsaneStrengthFeat and (state.insaneStrengthActive or
-                    unspent_spite_for_insane >= 3) %}
+                {% set available_spite = state.availableSpite %}
+                {% set in_sunflame_post = state.sunflamePostCombatPhase %}
+                {% set is_sunflame_bonus = state.sunflameBonusSpiteAvailable > 0 %}
+                {% set sunflame_active = state.sunflameActivatedThisRound %}
 
-                    <!-- BERSERK ACTIVATION -->
-                    {% if state.damageResolvedThisRound and can_afford_berserk %}
-                    <div id="spend-spite-box" class="spite-box">
-                        <div
-                            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <strong style="color: var(--accent-gold);">🦄 BERSERK ACTIVATION AVAILABLE!</strong>
-                                <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 2+ available
-                                    Spite. Spend 2 Spite to enter Berserk mode for this entire combat.</div>
-                            </div>
-                            <button type="button"
-                                class="{% if state.berserkActive %}active-feat alt{% else %}gold{% endif %}"
-                                onclick="spendSpiteForBerserk()" style="margin-top: 0;">
-                                {% if state.berserkActive %}
-                                🦄 Berserk ACTIVE (Click to Back Out)
-                                {% else %}
-                                Activate Berserk (2 spite)
-                                {% endif %}
-                            </button>
-                        </div>
-                    </div>
-                    {% endif %}
+                {% set can_afford_berserk = (not in_sunflame_post) and (not state.currentSetInfo) and (not
+                state.sunflameActiveRoll) and
+                ((state.berserkActive and state.spentSpiteThisRound == 2) or (not state.berserkActive and
+                available_spite >= 2)) %}
+                {% set can_afford_insane = (not in_sunflame_post) and (not state.sunflameActiveRoll) and
+                state.hasInsaneStrengthFeat and
+                (state.insaneStrengthActive or available_spite >= 3) %}
+                {% set can_afford_stunning = (not in_sunflame_post) and (not state.sunflameActiveRoll) and
+                state.hasStunningBlowFeat and
+                (state.stunningBlowActive or available_spite >= 2) %}
 
-                    <!-- INSANE STRENGTH ACTIVATION -->
-                    {% if state.damageResolvedThisRound and can_afford_insane %}
-                    <div id="insane-strength-box" class="insane-box">
-                        <div
-                            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <strong style="color: var(--accent-gold);">🦄 INSANE STRENGTH AVAILABLE!</strong>
-                                <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">You have 3+ available
-                                    Spite (Total: {{ unspent_spite_for_insane }}). Spend 3 Spite to double your STR for
-                                    this round.</div>
-                            </div>
-                            <button type="button"
-                                class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}" id="insane-btn"
-                                onclick="toggleInsaneStrength()" style="margin-top: 0;">
-                                {% if state.insaneStrengthActive %}
-                                🦄 Insane Strength ACTIVE (STR Doubled)
-                                {% else %}
-                                Activate Insane Strength (3 spite)
-                                {% endif %}
-                            </button>
-                        </div>
-                    </div>
-                    {% endif %}
+                {% set sunflame_max = [available_spite, state.sunflameBonusSpiteAvailable]|min if is_sunflame_bonus else
+                available_spite %}
+                {% set can_show_sunflame = (not state.sunflameActiveRoll) and state.hasSunflameFeat and
+                (sunflame_active or (not in_sunflame_post and available_spite >= 3)) %}
 
-                    <!-- CONFIRM ABILITY NEXT BUTTON -->
-                    {% if state.damageResolvedThisRound and not state.currentSetInfo %}
-                    <div id="ability-next-box" style="margin-top: 15px; margin-bottom: 15px;">
-                        <button type="button" class="gold" onclick="advanceAfterAbility()">Next</button>
-                    </div>
-                    {% endif %}
+                <!-- ALWAYS VISIBLE AVAILABLE SPITE POOL ABOVE ABILITIES -->
+                <div class="spite-pool-banner">
+                    <span>✨ Current Available Spite Pool: {{ available_spite }} Spite</span>
+                    <span style="font-size: 0.85em; color: #ffd1dc; font-weight: normal;">
+                        (Total Rolled: {{ state.currentSpiteTotal }} Spite)
+                    </span>
+                </div>
 
-                    <div class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
-                        <strong>🎲 Current Round Rolls:</strong>
+                <!-- BERSERK ACTIVATION -->
+                {% if state.damageResolvedThisRound and can_afford_berserk %}
+                <div id="spend-spite-box" class="spite-box">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                         <div>
-                            {% for h in state.rollHistory %}
-                            {% if h.dice is not none and h.dice|length > 0 %}
-                            <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
-                                    style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
-                            </div>
+                            <strong style="color: var(--accent-gold);">🦄 BERSERK ACTIVATION AVAILABLE!</strong>
+                            <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">Spend 2 Spite to enter
+                                Berserk mode for this entire combat.</div>
+                        </div>
+                        <button type="button"
+                            class="{% if state.berserkActive %}active-feat alt{% else %}gold{% endif %}"
+                            onclick="spendSpiteForBerserk()" style="margin-top: 0;">
+                            {% if state.berserkActive %}
+                            🦄 Berserk ACTIVE (Click to Back Out)
                             {% else %}
-                            <div>• <strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                            Activate Berserk (2 spite)
                             {% endif %}
-                            {% endfor %}
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- STUNNING BLOW ACTIVATION -->
+                {% if state.damageResolvedThisRound and can_afford_stunning %}
+                <div id="stunning-blow-box" class="stunning-box">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="color: var(--accent-gold);">💫 2/ STUNNING BLOW AVAILABLE!</strong>
+                            <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">Spend 2 Spite: Your target
+                                is seeing stars and loses ½ HPT for the rest of the combat round!</div>
+                        </div>
+                        <button type="button" class="gold {% if state.stunningBlowActive %}active-feat{% endif %}"
+                            id="stunning-btn" onclick="toggleStunningBlow()" style="margin-top: 0;">
+                            {% if state.stunningBlowActive %}
+                            💫 Stunning Blow ACTIVE (Click to Back Out)
+                            {% else %}
+                            Activate Stunning Blow (2 spite)
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- INSANE STRENGTH ACTIVATION -->
+                {% if state.damageResolvedThisRound and can_afford_insane %}
+                <div id="insane-strength-box" class="insane-box">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="color: var(--accent-gold);">🦄 3/ INSANE STRENGTH AVAILABLE!</strong>
+                            <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">Spend 3 Spite to double your
+                                STR for this round.</div>
+                        </div>
+                        <button type="button" class="purple {% if state.insaneStrengthActive %}active-feat{% endif %}"
+                            id="insane-btn" onclick="toggleInsaneStrength()" style="margin-top: 0;">
+                            {% if state.insaneStrengthActive %}
+                            🦄 Insane Strength ACTIVE (STR Doubled)
+                            {% else %}
+                            Activate Insane Strength (3 spite)
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- SUNFLAME SELECTION (DURING COMBAT) & EXTRA SPITE / ROLLS (AFTER COMBAT DAMAGE) -->
+                {% if state.damageResolvedThisRound and can_show_sunflame %}
+                <div id="sunflame-box" class="sunflame-box">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="color: var(--accent-gold);">
+                                {% if is_sunflame_bonus %}
+                                🔥 SUNFLAME ROLLED NEW SPITE!
+                                {% elif in_sunflame_post %}
+                                🔥 SUNFLAME READY — SPEND EXTRA SPITE?
+                                {% elif sunflame_active %}
+                                🔥 3+/ SUNFLAME SELECTED!
+                                {% else %}
+                                🔥 3+/ SUNFLAME AVAILABLE!
+                                {% endif %}
+                            </strong>
+                            <div style="margin-top: 4px; font-size: 0.9em; color: #ffd1dc;">
+                                {% if is_sunflame_bonus %}
+                                You rolled {{ state.sunflameBonusSpiteAvailable }} new Spite inside Sunflame! Choose 1
+                                to {{ sunflame_max }} Spite to add +1d6 fire damage each (or click Next to keep them as
+                                direct Spite).
+                                {% elif in_sunflame_post %}
+                                Combat damage is done! Choose any additional Spite (1 to {{ available_spite }}) to add
+                                +1d6 fire damage each, or click Next to roll {{ state.sunflamePendingDice }}d6 now.
+                                {% elif sunflame_active %}
+                                Sunflame selected (3 Spite for +3d6 fire). Extra Spite spending and fire damage rolls
+                                will happen right after normal/Berserker combat finishes!
+                                {% else %}
+                                Spend 3 Spite to select Sunflame (+3d6 fire damage rolled after normal/Berserker combat
+                                finishes).
+                                {% endif %}
+                                {% if in_sunflame_post and state.sunflamePendingDice > 0 %}
+                                <div style="color: var(--accent-gold); font-weight: bold; margin-top: 3px;">
+                                    Queued Fire Pool: {{ state.sunflamePendingDice }}d6 Fire Damage
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="sunflame-controls">
+                            {% if not in_sunflame_post %}
+                            <button type="button" class="flame {% if sunflame_active %}active-feat{% endif %}"
+                                onclick="toggleSunflame()" style="margin-top: 0;">
+                                {% if sunflame_active %}
+                                🔥 Sunflame SELECTED (Click to Back Out)
+                                {% else %}
+                                Select Sunflame (3 Spite)
+                                {% endif %}
+                            </button>
+                            {% elif sunflame_max >= 1 %}
+                            <label for="sunflame-spite-amount"
+                                style="margin-top:0; font-size:0.85em; color:#ffd1dc;">Add Spite:</label>
+                            <input type="number" id="sunflame-spite-amount" min="1" max="{{ sunflame_max }}"
+                                value="{{ sunflame_max }}">
+                            <button type="button" class="flame" onclick="addSunflameSpite()" style="margin-top: 0;">
+                                🔥 +Add Fire Dice
+                            </button>
+                            {% endif %}
+                            {% if in_sunflame_post and state.sunflamePendingDice > 3 %}
+                            <button type="button" class="reset" onclick="cancelSunflamePending()"
+                                style="margin-top: 0;">
+                                Undo Extra Dice
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
+                </div>
+                {% endif %}
 
-                    {% if not state.damageResolvedThisRound or state.currentSetInfo %}
-                    <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5 4"
-                        oninput="validateDiceInputUI()" autofocus>
+                <!-- CONFIRM ABILITY NEXT BUTTON -->
+                {% if state.damageResolvedThisRound and not state.currentSetInfo and not state.sunflameActiveRoll %}
+                <div id="ability-next-box" style="margin-top: 15px; margin-bottom: 15px;">
+                    <button type="button" class="gold" onclick="advanceAfterAbility()">
+                        {% if state.pendingSets %}
+                        Next: Roll Berserker Sets
+                        {% elif in_sunflame_post and state.sunflamePendingDice > 0 %}
+                        Next: Roll {{ state.sunflamePendingDice }}d6 Sunflame Fire
+                        {% else %}
+                        Next
+                        {% endif %}
+                    </button>
+                </div>
+                {% endif %}
+
+                <div class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
+                    <strong>🎲 Current Round Rolls:</strong>
                     <div>
-                        <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">Submit {% if
-                            state.currentSetInfo %}Rollover{% else %}Manual{% endif %} Roll</button>
-                        <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{
-                            state.expectedDice }}d6</button>
+                        {% for h in state.rollHistory %}
+                        {% if h.dice is not none and h.dice|length > 0 %}
+                        <div><strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
+                                style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
+                        </div>
+                        {% else %}
+                        <div><strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                        {% endif %}
+                        {% endfor %}
                     </div>
-                    {% endif %}
+                </div>
 
-                    <div id="damage-alert" class="alert hidden"></div>
+                {% if not state.damageResolvedThisRound or state.currentSetInfo or state.sunflameActiveRoll %}
+                <input type="text" id="dice-input" placeholder="e.g. 6 6 3 4 2 1 5" oninput="validateDiceInputUI()"
+                    autofocus>
+                <div>
+                    <button type="button" onclick="submitDamage(false)" id="submit-damage-btn">
+                        Submit {% if state.sunflameActiveRoll %}Sunflame{% elif state.currentSetInfo %}Rollover{% else
+                        %}Manual{% endif %} Roll
+                    </button>
+                    <button type="button" class="alt" onclick="submitDamage(true)" id="auto-roll-btn">Auto-Roll {{
+                        state.expectedDice }}d6</button>
+                </div>
+                {% endif %}
+
+                <div id="damage-alert" class="alert hidden"></div>
             </div>
 
             <!-- STEP 2: STR LOSS PHASE (ONLY BERSERK) -->
@@ -865,11 +1096,11 @@
                     <div>
                         {% for h in state.rollHistory %}
                         {% if h.dice is not none and h.dice|length > 0 %}
-                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
+                        <div><strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
                                 style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
                         </div>
                         {% else %}
-                        <div>• <strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                        <div><strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
                         {% endif %}
                         {% endfor %}
                     </div>
@@ -887,7 +1118,19 @@
                 <h3>Step 3: Final Damage Results</h3>
 
                 <div id="persistent-damage-summary" class="summary-card" style="margin-bottom: 15px;">
-                    <strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
+                    <div><strong>💥 Round {{ state.roundNum }} Damage Results:</strong> {{ state.lastDamageMessage }}
+                    </div>
+                    {% if state.currentFireDiceSum > 0 %}
+                    <div class="result-badge-fire">
+                        🔥 Includes {{ state.currentFireDiceSum }} Sunflame Fire Damage!
+                    </div>
+                    {% endif %}
+                    {% if state.stunningBlowActive %}
+                    <div class="result-badge-stun">
+                        💫 Stunning Blow ACTIVE: Target is seeing stars and loses ½ HPT for the rest of the combat
+                        round!
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="roll-breakdown {% if state.rollHistory|length == 0 %}hidden{% endif %}">
@@ -895,11 +1138,11 @@
                     <div>
                         {% for h in state.rollHistory %}
                         {% if h.dice is not none and h.dice|length > 0 %}
-                        <div>• <strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
+                        <div><strong>{{ h.phase }}:</strong> [{{ h.dice|join(', ') }}] = sum of {{ h.sum }} <span
                                 style="color:var(--accent-unicorn); font-weight:bold;">({{ h.spite }} Spite)</span>
                         </div>
                         {% else %}
-                        <div>• <strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
+                        <div><strong style="color:var(--accent-gold);">{{ h.phase }}</strong></div>
                         {% endif %}
                         {% endfor %}
                     </div>
@@ -907,7 +1150,7 @@
 
                 {% if state.berserkActive %}
                 {% set target_score = 20 + (state.level - 1) * 5 %}
-                <div class="instruction-card" style="border-color: var(--accent-gold);">
+                <div class="instruction-card gold-border">
                     <strong>🧠 ATTEMPT TO CALM DOWN:</strong>
                     <div>
                         Roll <strong>2d6</strong> to make a <strong>Level {{ state.level }} IQ Saving Roll</strong>.
@@ -938,8 +1181,7 @@
             <!-- SUMMARY PANEL -->
             <div id="summary-panel" class="section {% if state.activePhase != 'summary' %}hidden{% endif %}">
                 <h3 style="color:var(--accent-gold);">Combat Finished</h3>
-                <p id="summary-msg" class="instruction-card"
-                    style="font-size: 1.05em; background: rgba(74, 21, 53, 0.4); border-color: var(--accent-unicorn);">
+                <p id="summary-msg" class="instruction-card summary-border">
                     {{ state.summaryMsg if state.summaryMsg else '' }}
                 </p>
                 <button type="button" onclick="clearCombatStorage()">Start New Combat</button>
@@ -970,7 +1212,16 @@
                         {% for row in state.historyLog|reverse %}
                         <tr>
                             <td>{{ row.round }}</td>
-                            <td style="font-weight:bold; color:var(--accent-gold);">🦄 {{ row.total_damage }}</td>
+                            <td style="font-weight:bold; color:var(--accent-gold);">
+                                🦄 {{ row.total_damage }}
+                                {% if row.fire_damage %}
+                                <span style="color:var(--accent-flame); font-size:0.85em;">(🔥 {{ row.fire_damage }}
+                                    fire)</span>
+                                {% endif %}
+                                {% if row.stunning_blow %}
+                                <span style="color:var(--accent-gold); font-size:0.85em;">(💫 Stun)</span>
+                                {% endif %}
+                            </td>
                             <td style="font-weight:bold; color:var(--accent-unicorn);">{{ row.spite }}</td>
                             <td>-{{ row.str_lost }}</td>
                             <td>{{ row.str_remaining }}</td>
@@ -989,7 +1240,7 @@
 
         let modalCallback = null;
 
-        function showModal(title, message, isConfirm = false, showDiceInput = false, currentDice = 8, callback = null) {
+        function showModal(title, message, isConfirm = false, showDiceInput = false, currentDice = 7, callback = null) {
             const modal = document.getElementById('custom-modal');
             const titleEl = document.getElementById('modal-title');
             const msgEl = document.getElementById('modal-message');
@@ -1109,6 +1360,8 @@
                 if (defaults.initialAdds) document.getElementById('initial-adds').value = defaults.initialAdds;
                 if (defaults.alreadyBerserk !== undefined) document.getElementById('already-berserk').checked = defaults.alreadyBerserk;
                 if (defaults.hasInsaneStrength !== undefined) document.getElementById('has-insane-strength').checked = defaults.hasInsaneStrength;
+                if (defaults.hasStunningBlow !== undefined) document.getElementById('has-stunning-blow').checked = defaults.hasStunningBlow;
+                if (defaults.hasSunflame !== undefined) document.getElementById('has-sunflame').checked = defaults.hasSunflame;
             } catch (e) {
                 console.error("Failed to load setup defaults", e);
             }
@@ -1123,7 +1376,9 @@
                 minStrReq: document.getElementById('min-str-req').value,
                 initialAdds: document.getElementById('initial-adds').value,
                 alreadyBerserk: document.getElementById('already-berserk').checked,
-                hasInsaneStrength: document.getElementById('has-insane-strength').checked
+                hasInsaneStrength: document.getElementById('has-insane-strength').checked,
+                hasStunningBlow: document.getElementById('has-stunning-blow').checked,
+                hasSunflame: document.getElementById('has-sunflame').checked
             };
             localStorage.setItem(SETUP_DEFAULTS_KEY, JSON.stringify(defaults));
         }
@@ -1160,7 +1415,9 @@
                 min_str_req: document.getElementById('min-str-req').value,
                 initial_adds: document.getElementById('initial-adds').value,
                 already_berserk: document.getElementById('already-berserk').checked,
-                has_insane_strength: document.getElementById('has-insane-strength').checked
+                has_insane_strength: document.getElementById('has-insane-strength').checked,
+                has_stunning_blow: document.getElementById('has-stunning-blow').checked,
+                has_sunflame: document.getElementById('has-sunflame').checked
             };
             await fetch('/api/start_combat', {
                 method: 'POST',
@@ -1187,7 +1444,7 @@
             });
             const data = await res.json();
             if (data.warning_msg) {
-                const defaultDice = parseInt("{{ state.activeWeaponDice }}", 10) || 8;
+                const defaultDice = parseInt("{{ state.activeWeaponDice }}", 10) || 7;
                 const currentDice = data.expected_dice ? data.expected_dice : defaultDice;
                 showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                     location.reload();
@@ -1297,16 +1554,49 @@
         }
 
         async function spendSpiteForBerserk() {
-            await fetch('/api/activate_berserk', { method: 'POST' });
-            location.reload();
+            const res = await fetch('/api/activate_berserk', { method: 'POST' });
+            if (res.ok) location.reload();
         }
 
         async function toggleInsaneStrength() {
             const res = await fetch('/api/toggle_insane_strength', { method: 'POST' });
+            if (res.ok) location.reload();
+        }
+
+        async function toggleStunningBlow() {
+            const res = await fetch('/api/toggle_stunning_blow', { method: 'POST' });
+            if (res.ok) location.reload();
+        }
+
+        async function toggleSunflame() {
+            const res = await fetch('/api/toggle_sunflame', { method: 'POST' });
             const data = await res.json();
-            if (data.status === 'ok') {
-                location.reload();
+            if (!res.ok) {
+                showModal('🔥 Sunflame Error', data.message);
+                return;
             }
+            location.reload();
+        }
+
+        async function addSunflameSpite() {
+            const amountEl = document.getElementById('sunflame-spite-amount');
+            const amount = amountEl ? parseInt(amountEl.value, 10) : 1;
+            const res = await fetch('/api/add_sunflame_spite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: amount })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showModal('🔥 Sunflame Error', data.message);
+                return;
+            }
+            location.reload();
+        }
+
+        async function cancelSunflamePending() {
+            const res = await fetch('/api/cancel_sunflame_pending', { method: 'POST' });
+            if (res.ok) location.reload();
         }
 
         async function submitStrLoss(autoRoll) {
@@ -1326,7 +1616,7 @@
                 return;
             }
             if (data.warning_msg) {
-                const defaultDice = parseInt("{{ state.activeWeaponDice }}", 10) || 8;
+                const defaultDice = parseInt("{{ state.activeWeaponDice }}", 10) || 7;
                 const currentDice = data.expected_dice ? data.expected_dice : defaultDice;
                 showModal('🦄 Strength Warning', data.warning_msg, false, true, currentDice, () => {
                     location.reload();
@@ -1338,7 +1628,7 @@
 
         async function resolveIqManual(passed) {
             if (passed) {
-                showModal('🧠 IQ Save Passed', 'You successfully made your IQ Saving Roll and exited Berserk mode!', false, false, 8, async () => {
+                showModal('🧠 IQ Save Passed', 'You successfully made your IQ Saving Roll and exited Berserk mode!', false, false, 7, async () => {
                     await nextRound(true, 'passed');
                 });
             } else {
@@ -1347,7 +1637,7 @@
                     'You failed your IQ Saving Roll!\n\nDid an ally successfully perform a Helping Stunt to snap you out of your rage?',
                     true,
                     false,
-                    8,
+                    7,
                     async (confirmed) => {
                         if (confirmed) {
                             await fetch('/api/stunt_stop_berserk', { method: 'POST' });
@@ -1371,7 +1661,7 @@
                 'Did an ally successfully perform a stunt to help snap you out of your Berserk rage?',
                 true,
                 false,
-                8,
+                7,
                 async (confirmed) => {
                     if (confirmed) {
                         await fetch('/api/stunt_stop_berserk', { method: 'POST' });
@@ -1405,7 +1695,7 @@
         }
 
         function confirmReset() {
-            showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, false, 8, async (confirmed) => {
+            showModal('🦄 Reset Encounter', 'Clear combat log and start a fresh encounter?', true, false, 7, async (confirmed) => {
                 if (confirmed) {
                     await fetch('/api/reset_combat', { method: 'POST' });
                     location.reload();
